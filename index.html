@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile News App 🗞️</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #loader {
+      display: none;
+      font-size: 18px;
+      color: #ccc;
+    }
+    .newsCard {
+      background: #222;
+      border-radius: 12px;
+      margin: 10px 0;
+      padding: 15px;
+      text-align: left;
+      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+    }
+    .newsCard img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .newsCard h3 {
+      color: #00bfff;
+    }
+    a {
+      color: #ffb400;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🗞️ Daily News App</h2>
+  <button id="loadNews">Load Latest News</button>
+  <div id="loader">⏳ Loading news...</div>
+  <div id="newsContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
