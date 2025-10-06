@@ -8,27 +8,24 @@ loadNewsBtn.addEventListener('click', () => {
 
   // ✅ You can send body here (example filters)
   const bodyData = {
-    method:"POST",
-    link:"https://n8n-8ush.onrender.com/webhook/feed",
-    body:{"email":"suriayrus030@gmail.com"}
-  
-  };
+  method: "POST",
+  link: "https://n8n-8ush.onrender.com/webhook/feed",
+  body: { email: "suriayrus030@gmail.com" }
+};
 
-  fetch('https://n8n-8ush.onrender.com/webhook-test/request', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(bodyData)
+fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(bodyData)
+})
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+    return res.json().catch(() => ({})); // handle cases with no JSON response
   })
-  .then(res => res.json())
-  .then(data => {
-    loader.style.display = 'none';
-    const output = data.output;
-    if (!output) {
-      newsContainer.innerHTML = '<p>No news found.</p>';
-      return;
-    }
+  .then(data => console.log("✅ Success:", data))
+  .catch(err => console.error("❌ Error:", err));
 
     let i = 1;
     while (output[`headline${i}`]) {
