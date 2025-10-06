@@ -8,11 +8,13 @@ loadNewsBtn.addEventListener('click', () => {
 
   // ✅ You can send body here (example filters)
   const bodyData = {
-    email: "suriayrus030@gmail.com"
+    method:"POST",
+    link:"https://n8n-8ush.onrender.com/webhook/feed",
+    body:{"email":"suriayrus030@gmail.com"}
   
   };
 
-  fetch('https://n8n-8ush.onrender.com/webhook/feed', {
+  fetch('https://n8n-8ush.onrender.com/webhook-test/request', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
