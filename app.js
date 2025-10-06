@@ -6,7 +6,7 @@ loadNewsBtn.addEventListener('click', () => {
   newsContainer.innerHTML = '';
   loader.style.display = 'block';
 
-  fetch("https://n8n-8ush.onrender.com/webhook/feed", {
+  fetch("https://cors-anywhere.herokuapp.com/https://n8n-8ush.onrender.com/webhook/feed", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
