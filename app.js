@@ -2,7 +2,7 @@ const loadNewsBtn = document.getElementById('loadNews');
 const newsContainer = document.getElementById('newsContainer');
 const loader = document.getElementById('loader');
 
-loadNewsBtn.addEventListener('click', async () => {
+loadNewsBtn.addEventListener('click', () => {
   // Clear old news
   newsContainer.innerHTML = '';
   loader.style.display = 'block'; // ✅ show loader immediately
