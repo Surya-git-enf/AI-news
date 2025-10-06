@@ -8,17 +8,19 @@ loadNewsBtn.addEventListener('click', () => {
 
   // ✅ You can send body here (example filters)
   const bodyData = {
-    category: "Sports",
-    limit: 3
-  };
+  method: "POST",
+  link: "https://n8n-8ush.onrender.com/webhook/feed",
+  body: { email: "suriayrus030@gmail.com" }
+};
 
-  fetch('https://corsproxy.io/?https://n8n-8ush.onrender.com/webhook/feed', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(bodyData)
-  })
+fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(bodyData)
+})
+  
   .then(res => res.json())
   .then(data => {
     loader.style.display = 'none';
