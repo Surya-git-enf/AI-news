@@ -8,18 +8,22 @@ loader.style.display = 'block';
 
 // ✅ You can send body here (example filters)
 const bodyData = {
-method: "POST",
-link: "https://n8n-8ush.onrender.com/webhook/feed",
-body: { email: "suriayrus030@gmail.com" }
+method:"POST",
+link:"https://n8n-8ush.onrender.com/webhook/feed",
+body:{"email":"suriayrus030@gmail.com"}
+
 };
 
-fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
-method: "POST",
+fetch('https://n8n-8ush.onrender.com/webhook-test/request', {
+method: 'POST',
 headers: {
-"Content-Type": "application/json"
+'Content-Type': 'application/json'
 },
 body: JSON.stringify(bodyData)
 })
+
+
+
 .then(res => {
 if (!res.ok) throw new Error(HTTP error! Status: ${res.status});
 return res.json().catch(() => ({})); // handle cases with no JSON response
