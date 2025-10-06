@@ -6,24 +6,18 @@ loadNewsBtn.addEventListener('click', () => {
   newsContainer.innerHTML = '';
   loader.style.display = 'block';
 
-  // ✅ You can send body here (example filters)
-  const bodyData = {
-  method: "POST",
-  link: "https://n8n-8ush.onrender.com/webhook/feed",
-  body: { email: "suriayrus030@gmail.com" }
-};
-
-fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(bodyData)
-})
-  
+  fetch("https://n8n-8ush.onrender.com/webhook/feed", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email: "suriayrus030@gmail.com" })
+  })
   .then(res => res.json())
   .then(data => {
     loader.style.display = 'none';
+    console.log('Response:', data);
+
     const output = data.output;
     if (!output) {
       newsContainer.innerHTML = '<p>No news found.</p>';
@@ -31,7 +25,10 @@ fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
     }
 
     let i = 1;
+    let found = false;
+
     while (output[`headline${i}`]) {
+      found = true;
       const card = document.createElement('div');
       card.className = 'newsCard';
       card.innerHTML = `
@@ -45,13 +42,13 @@ fetch("https://n8n-8ush.onrender.com/webhook-test/request", {
       i++;
     }
 
-    if (i === 1) {
+    if (!found) {
       newsContainer.innerHTML = '<p>No news found.</p>';
     }
   })
   .catch(err => {
     loader.style.display = 'none';
     newsContainer.innerHTML = '<p>Error loading news ❌</p>';
-    console.error('Error:', err);
+    console.error('Fetch error details:', err);
   });
 });
