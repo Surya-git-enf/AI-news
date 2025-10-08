@@ -1,0 +1,18 @@
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get("email");
+  if (email) {
+    const name = email.split("@")[0];
+    const header = document.createElement("div");
+    header.style.position = "absolute";
+    header.style.top = "15px";
+    header.style.right = "25px";
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.innerHTML = `
+      <span style="color:white; font-size:16px; margin-right:10px;">${name}</span>
+      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" width="30">
+    `;
+    document.body.appendChild(header);
+  }
+</script>
