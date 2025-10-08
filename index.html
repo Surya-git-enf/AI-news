@@ -14,6 +14,11 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    transition: opacity 0.8s ease;
+  }
+
+  .fade-out {
+    opacity: 0;
   }
 
   .auth-container {
@@ -95,16 +100,17 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Popup */
+  /* Vibrant Popup */
   .popup {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.6);
-    background: rgba(255,255,255,0.9);
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    color: white;
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 0 30px rgba(255,255,255,0.8);
+    box-shadow: 0 0 40px rgba(0,150,255,0.7);
     text-align: center;
     opacity: 0;
     pointer-events: none;
@@ -119,19 +125,14 @@
 
   .popup h2 {
     margin-bottom: 10px;
-    color: #2196f3;
   }
 
-  .popup.error h2 {
-    color: red;
+  .popup.error {
+    background: linear-gradient(135deg, #ff5252, #ff1744);
+    box-shadow: 0 0 30px rgba(255,0,0,0.6);
   }
 
-  .popup p {
-    font-size: 15px;
-    color: #333;
-  }
-
-  /* Page transition */
+  /* Page slide */
   .slide-out {
     animation: slideOut 0.6s forwards;
   }
@@ -187,7 +188,7 @@
     document.getElementById("popupTitle").innerText = title;
     document.getElementById("popupMsg").innerText = msg;
     popup.classList.add("show");
-    setTimeout(() => popup.classList.remove("show"), 3000);
+    setTimeout(() => popup.classList.remove("show"), 2500);
   }
 
   function handleAuth() {
@@ -214,7 +215,10 @@
           const name = email.split("@")[0];
           showPopup("success", "Welcome Back", `Welcome ${name}`);
           setTimeout(() => {
-            window.location.href = `news.html?email=${encodeURIComponent(email)}`;
+            document.body.classList.add("fade-out");
+            setTimeout(() => {
+              window.location.href = `news.html?email=${encodeURIComponent(email)}`;
+            }, 800);
           }, 1500);
         } else {
           showPopup("error", "Error", "Account not found! Please sign up first.");
