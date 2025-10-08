@@ -1,156 +1,252 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>News App Login</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: "Segoe UI", sans-serif;
-    background: linear-gradient(135deg, #ff9966, #ff5e62, #9b51e0);
-    background-size: 300% 300%;
-    animation: gradientShift 8s ease infinite;
-  }
+  <meta charset="UTF-8">
+  <title>Login / Signup</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #ff9966, #ff5e62, #9b51e0);
+      background-size: 300% 300%;
+      animation: gradientShift 8s ease infinite;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(255,255,255,0.2);
+      padding: 40px 30px;
+      width: 350px;
+      color: white;
+      text-align: center;
+      z-index: 2;
+    }
 
-  .card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    box-shadow: 0 8px 40px rgba(255,255,255,0.2);
-    padding: 40px 30px;
-    width: 350px;
-    color: white;
-    text-align: center;
-  }
+    .card h2 {
+      margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 0.9em;
+      color: #ddd;
+      margin-bottom: 25px;
+    }
 
-  .card h2 {
-    margin-bottom: 10px;
-  }
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 50px;
+      outline: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 1em;
+    }
+    input::placeholder {
+      color: #eee;
+    }
 
-  .card p {
-    font-size: 0.9em;
-    color: #ddd;
-    margin-bottom: 25px;
-  }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ff9966, #ff5e62);
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
 
-  input {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 50px;
-    outline: none;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    font-size: 1em;
-  }
+    .toggle {
+      color: #fff;
+      font-size: 0.9em;
+      margin-top: 15px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
 
-  input::placeholder {
-    color: #eee;
-  }
+    /* Popup message */
+    .popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .popup.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .popup.success {
+      background: #28a745;
+    }
+    .popup.error {
+      background: #dc3545;
+    }
 
-  button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 50px;
-    background: linear-gradient(135deg, #ff9966, #ff5e62);
-    color: white;
-    font-size: 1em;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(255,255,255,0.4);
-  }
-
-  .toggle {
-    color: #fff;
-    font-size: 0.9em;
-    margin-top: 15px;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-</style>
+    /* Loading spinner overlay */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s, opacity 0.3s ease;
+    }
+    .overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
 
-<div class="card">
-  <h2 id="formTitle">Welcome Back</h2>
-  <p id="formDesc">Sign in to continue</p>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button id="authBtn">Sign In</button>
-  <div class="toggle" id="toggleMode">Don’t have an account? Sign Up</div>
-</div>
+  <div class="overlay" id="overlay">
+    <div class="spinner"></div>
+  </div>
 
-<script>
-  // 🧩 Supabase Config (Replace with your keys)
-  const SUPABASE_URL = "https://cmsyrrnekokiqeonfqdo.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29raXFlb25mcWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNzA4MjgsImV4cCI6MjA3Mzc0NjgyOH0.-UoWeire5geHZSqQoFEvGFQI7L6MseKtdcYAlSxh4o0";
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <div class="popup" id="popupMsg"></div>
 
-  let mode = "signin"; // or "signup"
-  const emailInput = document.getElementById("email");
-  const passwordInput = document.getElementById("password");
-  const authBtn = document.getElementById("authBtn");
-  const formTitle = document.getElementById("formTitle");
-  const formDesc = document.getElementById("formDesc");
-  const toggleMode = document.getElementById("toggleMode");
+  <div class="card">
+    <h2 id="formTitle">Welcome Back</h2>
+    <p id="formDesc">Sign in to continue</p>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="authBtn">Sign In</button>
+    <div class="toggle" id="toggleMode">Don’t have an account? Sign Up</div>
+  </div>
 
-  // 🔁 Toggle between Sign In / Sign Up
-  toggleMode.addEventListener("click", () => {
-    mode = mode === "signin" ? "signup" : "signin";
-    formTitle.textContent = mode === "signin" ? "Welcome Back" : "Create Account";
-    formDesc.textContent = mode === "signin" ? "Sign in to continue" : "Sign up to get started";
-    authBtn.textContent = mode === "signin" ? "Sign In" : "Sign Up";
-    toggleMode.textContent = mode === "signin"
-      ? "Don’t have an account? Sign Up"
-      : "Already have an account? Sign In";
-  });
+  <script>
+    // Supabase config (replace with your own)
+    const SUPABASE_URL = "https://YOUR_PROJECT_URL.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // 🧠 Auth logic
-  authBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
+    let mode = "signin"; // or "signup"
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const authBtn = document.getElementById("authBtn");
+    const formTitle = document.getElementById("formTitle");
+    const formDesc = document.getElementById("formDesc");
+    const toggleMode = document.getElementById("toggleMode");
+    const overlay = document.getElementById("overlay");
+    const popupMsg = document.getElementById("popupMsg");
 
-    if (!email || !password) return alert("Please fill all fields!");
-
-    if (mode === "signup") {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) return alert(error.message);
-      alert("Signup successful! Please verify your email.");
-    } else {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return alert(error.message);
-      localStorage.setItem("userEmail", email);
-      window.location.href = "news.html";
+    function showLoading(on) {
+      if (on) overlay.classList.add("active");
+      else overlay.classList.remove("active");
     }
-  });
 
-  // 🚪 Auto-login check
-  window.onload = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      window.location.href = "news.html";
+    function showPopup(message, isSuccess = true) {
+      popupMsg.textContent = message;
+      popupMsg.classList.remove("success", "error");
+      popupMsg.classList.add(isSuccess ? "success" : "error", "show");
+      setTimeout(() => {
+        popupMsg.classList.remove("show");
+      }, 3000);
     }
-  };
-</script>
+
+    toggleMode.addEventListener("click", () => {
+      mode = mode === "signin" ? "signup" : "signin";
+      formTitle.textContent = mode === "signin" ? "Welcome Back" : "Create Account";
+      formDesc.textContent = mode === "signin" ? "Sign in to continue" : "Sign up to get started";
+      authBtn.textContent = mode === "signin" ? "Sign In" : "Sign Up";
+      toggleMode.textContent = mode === "signin"
+        ? "Don’t have an account? Sign Up"
+        : "Already have an account? Sign In";
+    });
+
+    authBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) {
+        showPopup("Fill in both email & password", false);
+        return;
+      }
+
+      showLoading(true);
+
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        showLoading(false);
+        if (error) {
+          showPopup(error.message, false);
+        } else {
+          showPopup("Signup successful! Check email to confirm", true);
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        showLoading(false);
+        if (error) {
+          showPopup(error.message, false);
+        } else {
+          // On successful login
+          localStorage.setItem("userEmail", email);
+          showPopup("Welcome " + email.split("@")[0], true);
+          // Delay a little so user sees popup, then redirect
+          setTimeout(() => {
+            window.location.href = `news.html?email=${encodeURIComponent(email)}`;
+          }, 1000);
+        }
+      }
+    });
+
+    // Auto redirect if already logged in
+    window.onload = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data && data.user) {
+        const email = data.user.email;
+        localStorage.setItem("userEmail", email);
+        window.location.href = `news.html?email=${encodeURIComponent(email)}`;
+      }
+    };
+  </script>
 
 </body>
 </html>
