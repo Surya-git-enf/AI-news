@@ -1,252 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login / Signup</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #ff9966, #ff5e62, #9b51e0);
-      background-size: 300% 300%;
-      animation: gradientShift 8s ease infinite;
-      position: relative;
-      overflow: hidden;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Login / Sign Up</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    background: linear-gradient(135deg, #6ec6ff, #ff914d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
 
-    .card {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      box-shadow: 0 8px 40px rgba(255,255,255,0.2);
-      padding: 40px 30px;
-      width: 350px;
-      color: white;
-      text-align: center;
-      z-index: 2;
-    }
+  .auth-container {
+    width: 360px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.4);
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: floatIn 1s ease;
+  }
 
-    .card h2 {
-      margin-bottom: 10px;
-    }
-    .card p {
-      font-size: 0.9em;
-      color: #ddd;
-      margin-bottom: 25px;
-    }
+  @keyframes floatIn {
+    from {transform: translateY(50px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+  }
 
-    input {
-      width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 50px;
-      outline: none;
-      background: rgba(255,255,255,0.2);
-      color: white;
-      font-size: 1em;
-    }
-    input::placeholder {
-      color: #eee;
-    }
+  .auth-container h2 {
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px white;
+  }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 50px;
-      background: linear-gradient(135deg, #ff9966, #ff5e62);
-      color: white;
-      font-size: 1em;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    button:hover:not(:disabled) {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(255,255,255,0.4);
-    }
+  input {
+    width: 80%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 25px;
+    outline: none;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 0 5px rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.8);
+  }
 
-    .toggle {
-      color: #fff;
-      font-size: 0.9em;
-      margin-top: 15px;
-      cursor: pointer;
-      text-decoration: underline;
-    }
+  button {
+    width: 85%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 25px;
+    font-size: 17px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    background: linear-gradient(90deg, #ff914d, #ffb84d);
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    transition: all 0.3s ease;
+  }
 
-    /* Popup message */
-    .popup {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 20px;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-    }
-    .popup.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .popup.success {
-      background: #28a745;
-    }
-    .popup.error {
-      background: #dc3545;
-    }
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px white;
+  }
 
-    /* Loading spinner overlay */
-    .overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
-      visibility: hidden;
-      opacity: 0;
-      transition: visibility 0s, opacity 0.3s ease;
-    }
-    .overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
-    .spinner {
-      width: 60px;
-      height: 60px;
-      border: 6px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+  .switch {
+    margin-top: 20px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .loading {
+    border: 4px solid rgba(255,255,255,0.4);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    margin: 15px auto;
+    animation: spin 1s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Popup */
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.6);
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 0 30px rgba(255,255,255,0.8);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  .popup.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .popup h2 {
+    margin-bottom: 10px;
+    color: #2196f3;
+  }
+
+  .popup.error h2 {
+    color: red;
+  }
+
+  .popup p {
+    font-size: 15px;
+    color: #333;
+  }
+
+  /* Page transition */
+  .slide-out {
+    animation: slideOut 0.6s forwards;
+  }
+  .slide-in {
+    animation: slideIn 0.6s forwards;
+  }
+
+  @keyframes slideOut {
+    from {transform: translateX(0);}
+    to {transform: translateX(-100%);}
+  }
+  @keyframes slideIn {
+    from {transform: translateX(100%);}
+    to {transform: translateX(0);}
+  }
+</style>
 </head>
 <body>
 
-  <div class="overlay" id="overlay">
-    <div class="spinner"></div>
-  </div>
+<div class="auth-container" id="authBox">
+  <h2 id="formTitle">Sign Up</h2>
+  <input type="email" id="email" placeholder="Enter your email">
+  <input type="password" id="password" placeholder="Enter password">
+  <div class="loading" id="loading"></div>
+  <button id="authBtn" onclick="handleAuth()">Sign Up</button>
+  <div class="switch" id="switchText" onclick="toggleForm()">Already have an account? Sign In</div>
+</div>
 
-  <div class="popup" id="popupMsg"></div>
+<div class="popup" id="popupBox">
+  <h2 id="popupTitle"></h2>
+  <p id="popupMsg"></p>
+</div>
 
-  <div class="card">
-    <h2 id="formTitle">Welcome Back</h2>
-    <p id="formDesc">Sign in to continue</p>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button id="authBtn">Sign In</button>
-    <div class="toggle" id="toggleMode">Don’t have an account? Sign Up</div>
-  </div>
+<script>
+  let isSignUp = true;
 
-  <script>
-    // Supabase config (replace with your own)
-    const SUPABASE_URL = "https://YOUR_PROJECT_URL.supabase.co";
-    const SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function toggleForm() {
+    const box = document.getElementById("authBox");
+    box.classList.add("slide-out");
+    setTimeout(() => {
+      box.classList.remove("slide-out");
+      box.classList.add("slide-in");
+      document.getElementById("formTitle").innerText = isSignUp ? "Sign In" : "Sign Up";
+      document.getElementById("authBtn").innerText = isSignUp ? "Sign In" : "Sign Up";
+      document.getElementById("switchText").innerText = isSignUp ? "Don't have an account? Sign Up" : "Already have an account? Sign In";
+      isSignUp = !isSignUp;
+    }, 300);
+  }
 
-    let mode = "signin"; // or "signup"
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const authBtn = document.getElementById("authBtn");
-    const formTitle = document.getElementById("formTitle");
-    const formDesc = document.getElementById("formDesc");
-    const toggleMode = document.getElementById("toggleMode");
-    const overlay = document.getElementById("overlay");
-    const popupMsg = document.getElementById("popupMsg");
+  function showPopup(type, title, msg) {
+    const popup = document.getElementById("popupBox");
+    popup.className = `popup ${type}`;
+    document.getElementById("popupTitle").innerText = title;
+    document.getElementById("popupMsg").innerText = msg;
+    popup.classList.add("show");
+    setTimeout(() => popup.classList.remove("show"), 3000);
+  }
 
-    function showLoading(on) {
-      if (on) overlay.classList.add("active");
-      else overlay.classList.remove("active");
+  function handleAuth() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const loading = document.getElementById("loading");
+
+    if (!email || !password) {
+      showPopup("error", "Error", "Please fill all fields");
+      return;
     }
 
-    function showPopup(message, isSuccess = true) {
-      popupMsg.textContent = message;
-      popupMsg.classList.remove("success", "error");
-      popupMsg.classList.add(isSuccess ? "success" : "error", "show");
-      setTimeout(() => {
-        popupMsg.classList.remove("show");
-      }, 3000);
-    }
+    loading.style.display = "block";
 
-    toggleMode.addEventListener("click", () => {
-      mode = mode === "signin" ? "signup" : "signin";
-      formTitle.textContent = mode === "signin" ? "Welcome Back" : "Create Account";
-      formDesc.textContent = mode === "signin" ? "Sign in to continue" : "Sign up to get started";
-      authBtn.textContent = mode === "signin" ? "Sign In" : "Sign Up";
-      toggleMode.textContent = mode === "signin"
-        ? "Don’t have an account? Sign Up"
-        : "Already have an account? Sign In";
-    });
-
-    authBtn.addEventListener("click", async () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-      if (!email || !password) {
-        showPopup("Fill in both email & password", false);
-        return;
-      }
-
-      showLoading(true);
-
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        showLoading(false);
-        if (error) {
-          showPopup(error.message, false);
-        } else {
-          showPopup("Signup successful! Check email to confirm", true);
-        }
+    setTimeout(() => {
+      loading.style.display = "none";
+      if (isSignUp) {
+        localStorage.setItem("userEmail", email);
+        const name = email.split("@")[0];
+        showPopup("success", "Account Created!", `Welcome ${name}`);
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        showLoading(false);
-        if (error) {
-          showPopup(error.message, false);
-        } else {
-          // On successful login
-          localStorage.setItem("userEmail", email);
-          showPopup("Welcome " + email.split("@")[0], true);
-          // Delay a little so user sees popup, then redirect
+        const storedEmail = localStorage.getItem("userEmail");
+        if (storedEmail === email) {
+          const name = email.split("@")[0];
+          showPopup("success", "Welcome Back", `Welcome ${name}`);
           setTimeout(() => {
             window.location.href = `news.html?email=${encodeURIComponent(email)}`;
-          }, 1000);
+          }, 1500);
+        } else {
+          showPopup("error", "Error", "Account not found! Please sign up first.");
         }
       }
-    });
-
-    // Auto redirect if already logged in
-    window.onload = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data && data.user) {
-        const email = data.user.email;
-        localStorage.setItem("userEmail", email);
-        window.location.href = `news.html?email=${encodeURIComponent(email)}`;
-      }
-    };
-  </script>
-
+    }, 1500);
+  }
+</script>
 </body>
 </html>
