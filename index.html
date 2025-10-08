@@ -1,60 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mobile News App 🗞️</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    #loader {
-      display: none;
-      font-size: 18px;
-      color: #ccc;
-    }
-    .newsCard {
-      background: #222;
-      border-radius: 12px;
-      margin: 10px 0;
-      padding: 15px;
-      text-align: left;
-      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
-    }
-    .newsCard img {
-      width: 100%;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .newsCard h3 {
-      color: #00bfff;
-    }
-    a {
-      color: #ffb400;
-      text-decoration: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Vibrant News Feed</title>
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg,#FD1D1D,#FCAF45); /* Sunset background */
+  min-height: 100vh;
+}
+.news-container {
+  display: grid;
+  gap: 25px;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+.news-card {
+  background: linear-gradient(135deg,#E1306C,#833AB4); /* default card gradient */
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  overflow: hidden;
+  transform: translateY(40px);
+  opacity: 0.8;
+  transition: all 0.8s ease, opacity 0.5s ease;
+  position: relative;
+  color: #fff;
+}
+.news-card.active {
+  opacity: 1;
+  transform: translateY(0) scale(1.02);
+}
+.news-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.news-card .news-content {
+  padding: 15px;
+}
+.news-card .headline {
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.news-card .news-text {
+  font-size: 1em;
+  margin-bottom: 10px;
+}
+.news-card .category {
+  display: inline-block;
+  margin: 4px 4px 0 0;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.75em;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+}
+/* Gradient categories for variation */
+.cat-1 { background: linear-gradient(135deg,#E1306C,#833AB4);}
+.cat-2 { background: linear-gradient(135deg,#FD1D1D,#FCAF45);}
+.cat-3 { background: linear-gradient(135deg,#FF6EC7,#1CB5E0);}
+.cat-4 { background: linear-gradient(135deg,#F7971E,#FFD200);}
+.cat-5 { background: linear-gradient(135deg,#FF512F,#DD2476);}
+</style>
 </head>
 <body>
+<div class="news-container" id="newsContainer">
+<h2 style="text-align:center; color:#fff;">Loading News...</h2>
+</div>
 
-  <h2>🗞️ Daily News App</h2>
-  <button id="loadNews">Load Latest News</button>
-  <div id="loader">⏳ Loading news...</div>
-  <div id="newsContainer"></div>
+<script>
+const url = "https://n8n-8ush.onrender.com/webhook/feed";
+const container = document.getElementById("newsContainer");
+let newsData = null;
+let loadedCount = 0;
+const batchSize = 3; // load 3 cards at a time
 
-  <script src="app.js"></script>
+async function fetchNews() {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ email: "suriayrus030@gmail.com" })
+    });
+    const data = await res.json();
+    newsData = data.output;
+    container.innerHTML = "";
+    loadMoreNews();
+  } catch(err) {
+    container.innerHTML = `<p style="color:red;text-align:center">Error: ${err}</p>`;
+  }
+}
+
+function loadMoreNews() {
+  if (!newsData) return;
+  const totalNews = Object.keys(newsData).filter(k => k.startsWith("headline")).length;
+
+  for(let i = loadedCount + 1; i <= Math.min(loadedCount + batchSize, totalNews); i++){
+    const headline = newsData[`headline${i}`] || "";
+    const news = newsData[`news${i}`] || "";
+    const img = newsData[`image${i}`] || "https://via.placeholder.com/800x400";
+    const link = newsData[`link${i}`] || "#";
+    const categories = (newsData[`categories${i}`] || "General").split(",");
+
+    const card = document.createElement("div");
+    card.className = "news-card";
+
+    // pick a gradient for card background from palette
+    const gradients = [
+      "linear-gradient(135deg,#E1306C,#833AB4)",
+      "linear-gradient(135deg,#FD1D1D,#FCAF45)",
+      "linear-gradient(135deg,#FF6EC7,#1CB5E0)",
+      "linear-gradient(135deg,#F7971E,#FFD200)",
+      "linear-gradient(135deg,#FF512F,#DD2476)"
+    ];
+    card.style.background = gradients[(i-1)%gradients.length];
+
+    // categories HTML
+    let catsHTML = "";
+    categories.forEach((cat, idx)=>{
+      catsHTML += `<span class="category cat-${(idx%5)+1}">${cat.trim()}</span>`;
+    });
+
+    card.innerHTML = `
+      <img src="${img}" alt="News Image">
+      <div class="news-content">
+        <div class="headline">${headline}</div>
+        <div class="news-text">${news.substring(0,250)}...</div>
+        <a href="${link}" target="_blank" style="color:#fff;">Read more →</a><br><br>
+        ${catsHTML}
+      </div>
+    `;
+
+    container.appendChild(card);
+    setTimeout(()=>card.classList.add("active"), i*150);
+  }
+
+  loadedCount += batchSize;
+}
+
+// Scroll event: parallax and load more
+window.addEventListener("scroll", ()=>{
+  const scrollTop = window.scrollY;
+  const windowHeight = window.innerHeight;
+  const docHeight = document.body.offsetHeight;
+
+  // infinite scroll
+  if(scrollTop + windowHeight > docHeight - 100){
+    loadMoreNews();
+  }
+
+  // parallax per card image
+  document.querySelectorAll(".news-card").forEach(card=>{
+    const img = card.querySelector("img");
+    const rect = card.getBoundingClientRect();
+    const speed = 0.12;
+    img.style.transform = `translateY(${rect.top*speed}px) scale(1.05)`;
+  });
+
+  // highlight the active card
+  document.querySelectorAll(".news-card").forEach(card=>{
+    const rect = card.getBoundingClientRect();
+    if(rect.top < windowHeight/2 && rect.bottom > windowHeight/2){
+      card.classList.add("active");
+    }else{
+      card.classList.remove("active");
+    }
+  });
+});
+
+window.onload = fetchNews;
+</script>
 </body>
 </html>
