@@ -1,128 +1,155 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sign Up / Sign In</title>
+<title>News App Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  /* Body and Background */
   body {
     margin: 0;
-    font-family: "Segoe UI", sans-serif;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #00c6ff, #0072ff); /* Sky blue gradient */
+    height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-    overflow: hidden;
+    align-items: center;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #ff9966, #ff5e62, #9b51e0);
+    background-size: 300% 300%;
+    animation: gradientShift 8s ease infinite;
   }
 
-  /* Floating Panel */
-  .panel {
-    position: relative;
-    background: #fff;
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
     border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(255,255,255,0.2);
     padding: 40px 30px;
     width: 350px;
-    box-shadow: 0 20px 40px rgba(255,255,255,0.25);
+    color: white;
     text-align: center;
-    z-index: 2;
   }
 
-  .panel h2 {
-    margin-bottom: 30px;
-    color: #333;
+  .card h2 {
+    margin-bottom: 10px;
   }
 
-  /* Input Fields */
-  .panel input[type="email"] {
+  .card p {
+    font-size: 0.9em;
+    color: #ddd;
+    margin-bottom: 25px;
+  }
+
+  input {
     width: 100%;
     padding: 12px 15px;
-    margin-bottom: 20px;
-    border-radius: 50px;
-    border: 1px solid #ccc;
-    outline: none;
-    font-size: 1em;
-    transition: all 0.3s ease;
-  }
-
-  .panel input[type="email"]:focus {
-    border-color: #ff7e5f;
-    box-shadow: 0 0 10px rgba(255,126,95,0.5);
-  }
-
-  /* Buttons */
-  .panel button {
-    width: 100%;
-    padding: 12px 0;
+    margin: 10px 0;
     border: none;
     border-radius: 50px;
-    background: linear-gradient(135deg,#ff7e5f,#feb47b);
+    outline: none;
+    background: rgba(255,255,255,0.2);
     color: white;
     font-size: 1em;
-    font-weight: bold;
+  }
+
+  input::placeholder {
+    color: #eee;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #ff9966, #ff5e62);
+    color: white;
+    font-size: 1em;
     cursor: pointer;
-    transition: all 0.4s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
-  .panel button:hover {
+  button:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(255,126,95,0.6);
+    box-shadow: 0 0 20px rgba(255,255,255,0.4);
   }
 
-  /* Animated Glowing Gradient Circle */
-  .gradient-circle {
-    position: absolute;
-    width: 250px;
-    height: 250px;
-    background: linear-gradient(135deg,#ff7e5f,#feb47b);
-    top: -50px;
-    right: -50px;
-    border-radius: 50%;
-    z-index: 1;
-    filter: blur(60px);
-    animation: glow 4s ease-in-out infinite alternate;
-  }
-
-  @keyframes glow {
-    0% { transform: translateY(0px) translateX(0px) scale(1); opacity:0.7;}
-    50% { transform: translateY(10px) translateX(10px) scale(1.1); opacity:1;}
-    100% { transform: translateY(0px) translateX(0px) scale(1); opacity:0.7;}
+  .toggle {
+    color: #fff;
+    font-size: 0.9em;
+    margin-top: 15px;
+    cursor: pointer;
+    text-decoration: underline;
   }
 </style>
 </head>
 <body>
 
-<div class="gradient-circle"></div>
-
-<div class="panel">
-  <h2>Welcome</h2>
-  <input type="email" id="email" placeholder="Enter your email" />
-  <button id="signupBtn">Sign Up / Sign In</button>
+<div class="card">
+  <h2 id="formTitle">Welcome Back</h2>
+  <p id="formDesc">Sign in to continue</p>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="authBtn">Sign In</button>
+  <div class="toggle" id="toggleMode">Don’t have an account? Sign Up</div>
 </div>
 
 <script>
+  // 🧩 Supabase Config (Replace with your keys)
+  const SUPABASE_URL = "https://cmsyrrnekokiqeonfqdo.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29raXFlb25mcWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNzA4MjgsImV4cCI6MjA3Mzc0NjgyOH0.-UoWeire5geHZSqQoFEvGFQI7L6MseKtdcYAlSxh4o0";
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let mode = "signin"; // or "signup"
   const emailInput = document.getElementById("email");
-  const signupBtn = document.getElementById("signupBtn");
+  const passwordInput = document.getElementById("password");
+  const authBtn = document.getElementById("authBtn");
+  const formTitle = document.getElementById("formTitle");
+  const formDesc = document.getElementById("formDesc");
+  const toggleMode = document.getElementById("toggleMode");
 
-  // If user already signed in, go to news page
-  window.onload = () => {
-    const savedEmail = localStorage.getItem("userEmail");
-    if(savedEmail){
-      window.location.href = "news.html"; // your news page
-    }
-  }
+  // 🔁 Toggle between Sign In / Sign Up
+  toggleMode.addEventListener("click", () => {
+    mode = mode === "signin" ? "signup" : "signin";
+    formTitle.textContent = mode === "signin" ? "Welcome Back" : "Create Account";
+    formDesc.textContent = mode === "signin" ? "Sign in to continue" : "Sign up to get started";
+    authBtn.textContent = mode === "signin" ? "Sign In" : "Sign Up";
+    toggleMode.textContent = mode === "signin"
+      ? "Don’t have an account? Sign Up"
+      : "Already have an account? Sign In";
+  });
 
-  // Sign up / Sign in
-  signupBtn.addEventListener("click", () => {
+  // 🧠 Auth logic
+  authBtn.addEventListener("click", async () => {
     const email = emailInput.value.trim();
-    if(email && email.includes("@")){
-      localStorage.setItem("userEmail", email); // store forever
-      alert(`Welcome ${email}!`);
-      window.location.href = "news.html"; // redirect to news page
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) return alert("Please fill all fields!");
+
+    if (mode === "signup") {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) return alert(error.message);
+      alert("Signup successful! Please verify your email.");
     } else {
-      alert("Please enter a valid email.");
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return alert(error.message);
+      localStorage.setItem("userEmail", email);
+      window.location.href = "news.html";
     }
   });
+
+  // 🚪 Auto-login check
+  window.onload = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
+      window.location.href = "news.html";
+    }
+  };
 </script>
 
 </body>
