@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login / Signup</title>
+<title>Sign Up / Sign In</title>
 <style>
   /* Body and Background */
   body {
@@ -10,10 +10,10 @@
     font-family: "Segoe UI", sans-serif;
     min-height: 100vh;
     background: linear-gradient(135deg, #00c6ff, #0072ff); /* Sky blue gradient */
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
 
   /* Floating Panel */
@@ -24,8 +24,8 @@
     padding: 40px 30px;
     width: 350px;
     box-shadow: 0 20px 40px rgba(255,255,255,0.25);
-    z-index: 2;
     text-align: center;
+    z-index: 2;
   }
 
   .panel h2 {
@@ -101,25 +101,23 @@
 </div>
 
 <script>
-  // Get elements
   const emailInput = document.getElementById("email");
   const signupBtn = document.getElementById("signupBtn");
 
-  // Check if user already exists
+  // If user already signed in, go to news page
   window.onload = () => {
     const savedEmail = localStorage.getItem("userEmail");
     if(savedEmail){
-      // Redirect to news app screen if email exists
-      window.location.href = "news.html"; // replace with your news page
+      window.location.href = "news.html"; // your news page
     }
   }
 
-  // Handle signup/signin
+  // Sign up / Sign in
   signupBtn.addEventListener("click", () => {
     const email = emailInput.value.trim();
     if(email && email.includes("@")){
       localStorage.setItem("userEmail", email); // store forever
-      alert("Welcome " + email + "!");
+      alert(`Welcome ${email}!`);
       window.location.href = "news.html"; // redirect to news page
     } else {
       alert("Please enter a valid email.");
