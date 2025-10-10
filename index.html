@@ -165,8 +165,15 @@
   <h2 id="popupTitle"></h2>
   <p id="popupMsg"></p>
 </div>
-
 <script>
+  // Check if user already logged in
+  window.onload = () => {
+    const savedEmail = localStorage.getItem("userEmail");
+    if (savedEmail) {
+      window.location.href = `news.html?email=${encodeURIComponent(savedEmail)}`;
+    }
+  };
+
   let isSignUp = true;
 
   function toggleForm() {
