@@ -2,48 +2,337 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>News Page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLIDE News</title>
+
 <style>
-  body {
-    margin: 0;
-    height: 100vh;
-    background: linear-gradient(135deg, #6ec6ff, #ff914d);
-    color: white;
-    font-family: "Poppins", sans-serif;
-  }
-  .header {
-    position: absolute;
-    top: 15px;
-    right: 25px;
-    display: flex;
-    align-items: center;
-  }
-  .header span {
-    font-size: 16px;
-    margin-right: 10px;
-  }
-  .header img {
-    width: 30px;
-    border-radius: 50%;
-    background: white;
-    padding: 2px;
-  }
+* {box-sizing:border-box; margin:0; padding:0; font-family:"Poppins",sans-serif;}
+
+body {
+  background:#000;
+  color:#fff;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* HEADER */
+header {
+  position:fixed;
+  top:0;
+  width:100%;
+  height:80px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 25px;
+  background:linear-gradient(90deg,#ff0080,#ff8c00,#40e0d0);
+  border-bottom-left-radius:25px;
+  border-bottom-right-radius:25px;
+  z-index:10;
+  box-shadow:0 4px 20px rgba(255,0,128,0.5);
+}
+
+header .title {
+  font-size:30px;
+  font-weight:800;
+  letter-spacing:1px;
+  display:flex;
+  align-items:center;
+}
+
+header .title #user-email {
+  font-size:16px;
+  font-weight:400;
+  color:#fff;
+  opacity:0.8;
+  margin-left:10px;
+}
+
+header .heart {
+  font-size:28px;
+  background:linear-gradient(45deg,#ff3366,#ff6699,#ffcc33);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* CAROUSEL */
+.carousel {
+  position: relative;
+  flex:1;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  padding-top:100px;
+  padding-bottom:100px;
+}
+
+.news-card {
+  scroll-snap-align: center;
+  height: calc(100vh - 250px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-radius: 25px;
+  margin: 30px 20px;
+  color: white;
+  padding: 15px;
+  text-align: left;
+  transform: scale(0.9);
+  opacity: 0.4;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+  background:#111;
+}
+
+.news-card.active {transform: scale(1); opacity:1;}
+
+.news-card img {
+  width:100%;
+  border-radius:18px;
+  height:50%;
+  object-fit:cover;
+  margin-bottom:15px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.3);
+}
+
+.news-title {font-size:20px; font-weight:700; margin-bottom:10px;}
+.news-text {font-size:15px; line-height:1.6; opacity:0.95; margin-bottom:10px;}
+
+/* ICONS OUTLINED STYLE */
+.news-icons {display:flex; justify-content:flex-end; gap:15px;}
+.news-icons span {
+  cursor:pointer;
+  font-size:22px;
+  color:transparent;
+  -webkit-text-stroke:1px white;
+  transition: transform 0.3s ease, color 0.3s ease, -webkit-text-stroke 0.3s ease;
+}
+.news-icons span:hover {transform: scale(1.2);}
+.news-icons span.liked, .news-icons span.saved {
+  color:white;
+  -webkit-text-stroke:0;
+}
+
+/* FOOTER */
+footer {
+  height:70px;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  border-top-left-radius:25px;
+  border-top-right-radius:25px;
+  background: rgba(20,20,20,0.85);
+  backdrop-filter:blur(10px);
+  box-shadow:0 -4px 30px rgba(255,255,255,0.3);
+  z-index:10;
+}
+
+footer i {
+  font-size:26px;
+  color:transparent;
+  -webkit-text-stroke:1px white;
+  cursor:pointer;
+  transition:all 0.3s ease;
+}
+footer i.active {
+  -webkit-text-stroke:0;
+  color:white;
+}
+footer i:hover {transform:scale(1.3);}
+
+/* SHIMMER */
+.shimmer-card {
+  scroll-snap-align: center;
+  height: calc(100vh - 250px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-radius: 25px;
+  margin: 30px 20px;
+  padding: 15px;
+  background:#111;
+  transform: scale(0.9);
+  opacity: 0.4;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+.shimmer-image, .shimmer-line {
+  position: relative;
+  overflow: hidden;
+  background:#222;
+  border-radius:16px;
+  margin-bottom:15px;
+}
+.shimmer-image {height:50%; border-radius:18px;}
+.shimmer-line.full {height:50px; width:90%;}
+.shimmer-line.medium {height:50px; width:80%;}
+.shimmer-line.short {height:50px; width:60%;}
+
+.shimmer::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:-150px;
+  height:100%;
+  width:150px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer {100% {transform: translateX(300%);}}
 </style>
 </head>
-<body>
-  <h1 style="text-align:center; margin-top:100px;">Welcome to News App 📰</h1>
-  <div class="header" id="userHeader"></div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const email = params.get("email");
-    if (email) {
-      const name = email.split("@")[0];
-      document.getElementById("userHeader").innerHTML = `
-        <span>${name}</span>
-        <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png">
-      `;
+<body>
+<header>
+  <div class="title">
+    SLIDE
+    <span id="user-email"></span>
+  </div>
+  <div class="heart">❤️</div>
+</header>
+
+<div class="carousel" id="news-container"></div>
+
+<footer>
+  <i class="home active">🏠</i>
+  <i class="search">🔎</i>
+  <i class="bookmark">🔖</i>
+</footer>
+
+<script>
+const container = document.getElementById('news-container');
+const emailDisplay = document.getElementById('user-email');
+const params = new URLSearchParams(window.location.search);
+const userEmail = params.get('email') || localStorage.getItem('userEmail') || 'unknown@user.com';
+emailDisplay.innerText = userEmail;
+
+let keepFetching = true;
+
+// SHIMMER CARD DISPLAY
+function showShimmer() {
+  for(let i=0;i<5;i++){
+    const shimmer = document.createElement('div');
+    shimmer.className='shimmer-card shimmer';
+    shimmer.innerHTML=`
+      <div class="shimmer-image shimmer"></div>
+      <div class="shimmer-line full shimmer"></div>
+      <div class="shimmer-line medium shimmer"></div>
+      <div class="shimmer-line short shimmer"></div>
+    `;
+    container.appendChild(shimmer);
+  }
+}
+
+// FETCH NEWS LOOP (APPEND NEW CARDS)
+async function fetchNews(){
+  while(keepFetching){
+    try{
+      showShimmer();
+
+      const res = await fetch('https://n8n-8ush.onrender.com/webhook/feed',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: userEmail })
+      });
+      if(!res.ok) throw new Error("Fetch failed");
+
+      const { output } = await res.json();
+
+      // Remove shimmer placeholders
+      document.querySelectorAll('.shimmer-card.shimmer').forEach(s=>s.remove());
+
+      // Append 5 new cards
+      for(let i=1;i<=5;i++){
+        const headline = output[`headline${i}`];
+        if(!headline) continue;
+
+        const newsData = {
+          headline,
+          description: output[`news${i}`],
+          image: output[`image${i}`] || "",
+          categories: output[`categories${i}`] || "",
+          link: output[`link${i}`] || ""
+        };
+
+        const card = document.createElement('div');
+        card.className='news-card';
+        card.innerHTML=`
+          <img src="${newsData.image}" alt="News">
+          <div class="news-title">${newsData.headline}</div>
+          <div class="news-text">${newsData.description.slice(0,120)}...</div>
+          <div class="news-icons">
+            <span class="like">❤️</span>
+            <span class="save">🔖</span>
+          </div>
+        `;
+
+        // Like / Save actions
+        const likeBtn = card.querySelector('.like');
+        const saveBtn = card.querySelector('.save');
+        likeBtn.addEventListener('click',()=>{ likeBtn.classList.toggle('liked'); sendAction('like',newsData); });
+        saveBtn.addEventListener('click',()=>{ saveBtn.classList.toggle('saved'); sendAction('save',newsData); });
+
+        container.appendChild(card);
+      }
+
+      // Reattach observer for scale animation
+      const cards = document.querySelectorAll('.news-card');
+      const observer = new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          entry.target.classList.toggle('active',entry.isIntersecting);
+        });
+      },{threshold:0.5});
+      cards.forEach(card=>observer.observe(card));
+
+    }catch(err){console.error(err);}
+    await new Promise(r=>setTimeout(r,8000));
+  }
+}
+
+// LIKE/SAVE POST
+async function sendAction(action,news){
+  const urlMap = {
+    like:'https://pulse-1-x2sm.onrender.com/like',
+    save:'https://pulse-1-x2sm.onrender.com/save'
+  };
+  try{
+    await fetch(urlMap[action],{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        email:userEmail,
+        headline:news.headline,
+        news:news.description,
+        url:news.link,
+        image_url:news.image,
+        categories:news.categories
+      })
+    });
+  }catch(err){console.error("Action failed:",err);}
+}
+
+// FOOTER NAVIGATION
+document.querySelectorAll('footer i').forEach(icon=>{
+  icon.addEventListener('click',()=>{
+    document.querySelectorAll('footer i').forEach(i=>i.classList.remove('active'));
+    icon.classList.add('active');
+
+    if(icon.classList.contains('home')){
+      keepFetching=true;
+      fetchNews();
+    } else if(icon.classList.contains('search')){
+      keepFetching=false;
+      window.location.href='search.html';
+    } else if(icon.classList.contains('bookmark')){
+      keepFetching=false;
+      window.location.href='bookmark.html';
     }
-  </script>
+  });
+});
+
+// INITIAL FETCH
+fetchNews();
+</script>
 </body>
 </html>
