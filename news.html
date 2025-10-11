@@ -82,7 +82,6 @@ header .heart {
   transform: scale(0.9);
   opacity: 0.4;
   transition: transform 0.6s ease, opacity 0.6s ease;
-  background:#111;
 }
 
 .news-card.active {transform: scale(1); opacity:1;}
@@ -208,11 +207,20 @@ const userEmail = params.get('email') || localStorage.getItem('userEmail') || 'u
 emailDisplay.innerText = userEmail;
 
 let keepFetching = true;
+const shownNewsSet = new Set(); // store headline+description pairs
 
-// SHIMMER CARD DISPLAY
+const colors = [
+  {bg:"#FF2D78", text:"#fff"}, // Hot Pink
+  {bg:"#3A7BFF", text:"#fff"}, // Electric Blue
+  {bg:"#A93AFF", text:"#fff"}, // Purple Magenta
+  {bg:"#FF6B3D", text:"#fff"}, // Sunset Orange
+  {bg:"#FFF23D", text:"#000"}  // Neon Yellow
+];
+
+// Show shimmer
 function showShimmer() {
   for(let i=0;i<5;i++){
-    const shimmer = document.createElement('div');
+    const shimmer=document.createElement('div');
     shimmer.className='shimmer-card shimmer';
     shimmer.innerHTML=`
       <div class="shimmer-image shimmer"></div>
@@ -224,75 +232,91 @@ function showShimmer() {
   }
 }
 
-// FETCH NEWS LOOP (APPEND NEW CARDS)
+// Fetch loop
 async function fetchNews(){
   while(keepFetching){
     try{
       showShimmer();
 
-      const res = await fetch('https://n8n-8ush.onrender.com/webhook/feed',{
+      const res = await fetch(`https://n8n-8ush.onrender.com/webhook/feed?ts=${Date.now()}`, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'Cache-Control':'no-cache',
+          'Pragma':'no-cache'
+        },
         body: JSON.stringify({ email: userEmail })
       });
+
       if(!res.ok) throw new Error("Fetch failed");
 
       const { output } = await res.json();
-
-      // Remove shimmer placeholders
       document.querySelectorAll('.shimmer-card.shimmer').forEach(s=>s.remove());
 
-      // Append 5 new cards
+      const newBatch = [];
       for(let i=1;i<=5;i++){
         const headline = output[`headline${i}`];
-        if(!headline) continue;
-
-        const newsData = {
+        const desc = output[`news${i}`];
+        if(!headline || !desc) continue;
+        const uniqueKey = headline.trim() + desc.trim();
+        if(shownNewsSet.has(uniqueKey)) continue;
+        shownNewsSet.add(uniqueKey);
+        newBatch.push({
           headline,
-          description: output[`news${i}`],
+          description: desc,
           image: output[`image${i}`] || "",
           categories: output[`categories${i}`] || "",
           link: output[`link${i}`] || ""
-        };
+        });
+      }
 
-        const card = document.createElement('div');
+      if(newBatch.length === 0){
+        console.log("⚠️ No new news found, waiting...");
+        await new Promise(r=>setTimeout(r,8000));
+        continue;
+      }
+
+      newBatch.forEach((news, idx)=>{
+        const color = colors[(container.childElementCount + idx) % colors.length];
+        const card=document.createElement('div');
         card.className='news-card';
+        card.style.background=color.bg;
+        card.style.color=color.text;
         card.innerHTML=`
-          <img src="${newsData.image}" alt="News">
-          <div class="news-title">${newsData.headline}</div>
-          <div class="news-text">${newsData.description.slice(0,120)}...</div>
+          <img src="${news.image}" alt="News">
+          <div class="news-title">${news.headline}</div>
+          <div class="news-text">${news.description.slice(0,120)}...</div>
           <div class="news-icons">
             <span class="like">❤️</span>
             <span class="save">🔖</span>
           </div>
         `;
-
-        // Like / Save actions
-        const likeBtn = card.querySelector('.like');
-        const saveBtn = card.querySelector('.save');
-        likeBtn.addEventListener('click',()=>{ likeBtn.classList.toggle('liked'); sendAction('like',newsData); });
-        saveBtn.addEventListener('click',()=>{ saveBtn.classList.toggle('saved'); sendAction('save',newsData); });
-
+        const likeBtn=card.querySelector('.like');
+        const saveBtn=card.querySelector('.save');
+        likeBtn.addEventListener('click',()=>{likeBtn.classList.toggle('liked');sendAction('like',news);});
+        saveBtn.addEventListener('click',()=>{saveBtn.classList.toggle('saved');sendAction('save',news);});
         container.appendChild(card);
-      }
+      });
 
-      // Reattach observer for scale animation
-      const cards = document.querySelectorAll('.news-card');
-      const observer = new IntersectionObserver(entries=>{
+      // Scale animation
+      const cards=document.querySelectorAll('.news-card');
+      const observer=new IntersectionObserver(entries=>{
         entries.forEach(entry=>{
           entry.target.classList.toggle('active',entry.isIntersecting);
         });
       },{threshold:0.5});
-      cards.forEach(card=>observer.observe(card));
+      cards.forEach(c=>observer.observe(c));
 
-    }catch(err){console.error(err);}
+    }catch(err){
+      console.error("❌ Fetch error:",err);
+    }
     await new Promise(r=>setTimeout(r,8000));
   }
 }
 
-// LIKE/SAVE POST
+// Like/Save
 async function sendAction(action,news){
-  const urlMap = {
+  const urlMap={
     like:'https://pulse-1-x2sm.onrender.com/like',
     save:'https://pulse-1-x2sm.onrender.com/save'
   };
@@ -300,7 +324,7 @@ async function sendAction(action,news){
     await fetch(urlMap[action],{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
+      body:JSON.stringify({
         email:userEmail,
         headline:news.headline,
         news:news.description,
@@ -312,7 +336,7 @@ async function sendAction(action,news){
   }catch(err){console.error("Action failed:",err);}
 }
 
-// FOOTER NAVIGATION
+// Footer navigation
 document.querySelectorAll('footer i').forEach(icon=>{
   icon.addEventListener('click',()=>{
     document.querySelectorAll('footer i').forEach(i=>i.classList.remove('active'));
@@ -331,7 +355,7 @@ document.querySelectorAll('footer i').forEach(icon=>{
   });
 });
 
-// INITIAL FETCH
+// Initial start
 fetchNews();
 </script>
 </body>
