@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SLIDE News</title>
 
 <style>
@@ -30,7 +30,7 @@ header {
   background:linear-gradient(90deg,#ff0080,#ff8c00,#40e0d0);
   border-bottom-left-radius:25px;
   border-bottom-right-radius:25px;
-  z-index:10;
+  z-index:12;
   box-shadow:0 4px 20px rgba(255,0,128,0.5);
 }
 
@@ -50,11 +50,63 @@ header .title #user-email {
   margin-left:10px;
 }
 
-header .heart {
-  font-size:28px;
-  background:linear-gradient(45deg,#ff3366,#ff6699,#ffcc33);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+/* Header heart button */
+.header-heart-btn {
+  width:52px;
+  height:40px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border:0;
+  outline:none;
+  background: linear-gradient(90deg,#ff2d78,#ff6b3d,#ffcc33);
+  box-shadow: 0 8px 30px rgba(255,45,120,0.25), inset 0 -2px 6px rgba(0,0,0,0.25);
+  font-size:20px;
+  color:white;
+}
+
+/* CATEGORY NAV */
+#category-bar-container {
+  position:fixed;
+  top:90px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  z-index:11;
+}
+
+#category-bar {
+  display:flex;
+  overflow-x:auto;
+  scroll-behavior:smooth;
+  padding:10px 0;
+  gap:15px;
+}
+
+#category-bar::-webkit-scrollbar { display:none; }
+
+.category-item {
+  flex:0 0 auto;
+  padding:10px 25px;
+  border-radius:50px;
+  background:#111;
+  color:rgba(255,255,255,0.8);
+  font-weight:bold;
+  font-size:10px;
+  text-align:center;
+  cursor:pointer;
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease;
+  white-space:nowrap;
+}
+
+.category-item.active {
+  transform: scale(1.2);
+  opacity:1;
+  background: linear-gradient(90deg,#00BFFF,#2DFEFF,#39FF14,#FF2BC2,#DBFF00,#FF3077,#FD6A6A);
+  color:#fff;
+  box-shadow:0 0 20px #00bfff,0 0 40px #2dfeff,0 0 60px #39ff14,0 0 80px #ff2bc2;
 }
 
 /* CAROUSEL */
@@ -64,7 +116,7 @@ header .heart {
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  padding-top:100px;
+  padding-top:150px;
   padding-bottom:100px;
 }
 
@@ -82,6 +134,7 @@ header .heart {
   transform: scale(0.9);
   opacity: 0.4;
   transition: transform 0.6s ease, opacity 0.6s ease;
+  cursor:pointer;
 }
 
 .news-card.active {transform: scale(1); opacity:1;}
@@ -89,7 +142,7 @@ header .heart {
 .news-card img {
   width:100%;
   border-radius:18px;
-  height:50%;
+  height:100%;
   object-fit:cover;
   margin-bottom:15px;
   box-shadow:0 8px 20px rgba(0,0,0,0.3);
@@ -98,19 +151,22 @@ header .heart {
 .news-title {font-size:20px; font-weight:700; margin-bottom:10px;}
 .news-text {font-size:15px; line-height:1.6; opacity:0.95; margin-bottom:10px;}
 
-/* ICONS OUTLINED STYLE */
 .news-icons {display:flex; justify-content:flex-end; gap:15px;}
 .news-icons span {
   cursor:pointer;
   font-size:22px;
   color:transparent;
-  -webkit-text-stroke:1px white;
-  transition: transform 0.3s ease, color 0.3s ease, -webkit-text-stroke 0.3s ease;
+  -webkit-text-stroke:1.4px #ff3366;
+  transition: transform 0.18s ease, color 0.18s ease, -webkit-text-stroke 0.18s ease;
+  user-select:none;
+  display:inline-block;
+  line-height:1;
 }
-.news-icons span:hover {transform: scale(1.2);}
+
 .news-icons span.liked, .news-icons span.saved {
-  color:white;
+  color:#ff2d55;
   -webkit-text-stroke:0;
+  transform:scale(1.05);
 }
 
 /* FOOTER */
@@ -179,6 +235,13 @@ footer i:hover {transform:scale(1.3);}
   animation:shimmer 1.5s infinite;
 }
 @keyframes shimmer {100% {transform: translateX(300%);}}
+
+.no-more {
+  text-align:center;
+  padding:30px 20px;
+  color:rgba(255,255,255,0.6);
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -188,8 +251,21 @@ footer i:hover {transform:scale(1.3);}
     SLIDE
     <span id="user-email"></span>
   </div>
-  <div class="heart">❤️</div>
+  <button class="header-heart-btn" id="header-heart">♥️</button>
 </header>
+
+<div id="category-bar-container">
+  <div id="category-bar">
+    <div class="category-item active" data-category="For You">For You</div>
+    <div class="category-item" data-category="Global">Global</div>
+    <div class="category-item" data-category="Business and finance">Business and finance</div>
+    <div class="category-item" data-category="Science and technology">Science and technology</div>
+    <div class="category-item" data-category="Entertainment">Entertainment</div>
+    <div class="category-item" data-category="Sports">Sports</div>
+    <div class="category-item" data-category="Lifestyle">Lifestyle</div>
+    <div class="category-item" data-category="Trending">Trending</div>
+  </div>
+</div>
 
 <div class="carousel" id="news-container"></div>
 
@@ -200,163 +276,340 @@ footer i:hover {transform:scale(1.3);}
 </footer>
 
 <script>
+/* ========== INITIAL STATE & CONFIG ========== */
 const container = document.getElementById('news-container');
 const emailDisplay = document.getElementById('user-email');
 const params = new URLSearchParams(window.location.search);
 const userEmail = params.get('email') || localStorage.getItem('userEmail') || 'unknown@user.com';
 emailDisplay.innerText = userEmail;
 
-let keepFetching = true;
-const shownNewsSet = new Set(); // store headline+description pairs
+const categoryItems = document.querySelectorAll('.category-item');
+const categoryBar = document.getElementById('category-bar');
 
-const colors = [
-  {bg:"#FF2D78", text:"#fff"}, // Hot Pink
-  {bg:"#3A7BFF", text:"#fff"}, // Electric Blue
-  {bg:"#A93AFF", text:"#fff"}, // Purple Magenta
-  {bg:"#FF6B3D", text:"#fff"}, // Sunset Orange
-  {bg:"#FFF23D", text:"#000"}  // Neon Yellow
-];
+const PAGE_SIZE = 5;              // items per page (server should respect)
+let currentPage = 1;              // current page for the active category
+let selectedCategory = "For You";
+let keepFetching = true;          // true until server says no more data
+let shownNewsSet = new Set();     // avoid duplicates
+let clickedNewsBuffer = [];       // buffer to send current feed
+let fetchingInProgress = false;   // prevent parallel fetches
 
-// Show shimmer
-function showShimmer() {
-  for(let i=0;i<5;i++){
-    const shimmer=document.createElement('div');
-    shimmer.className='shimmer-card shimmer';
-    shimmer.innerHTML=`
+const categoryMap = {
+  "For You":"For You",
+  "Global":"General / Global",
+  "Business and finance":"Business & Finance",
+  "Science and technology":"Science and Technology",
+  "Entertainment":"Entertainment",
+  "Sports":"Sports",
+  "Lifestyle":"Lifestyle & Society",
+  "Trending":"Trending"
+};
+
+/* ========== SINGLE OBSERVER FOR CARD ACTIVATION ========== */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    entry.target.classList.toggle('active', entry.isIntersecting);
+  });
+}, { threshold: 0.5 });
+
+/* ========== SHIMMER HELPERS ========== */
+function showShimmer(count = 3) {
+  const shimmerElems = [];
+  for (let i = 0; i < count; i++) {
+    const shimmer = document.createElement('div');
+    shimmer.className = 'shimmer-card shimmer';
+    shimmer.innerHTML = `
       <div class="shimmer-image shimmer"></div>
       <div class="shimmer-line full shimmer"></div>
       <div class="shimmer-line medium shimmer"></div>
       <div class="shimmer-line short shimmer"></div>
     `;
     container.appendChild(shimmer);
+    shimmerElems.push(shimmer);
   }
+  return shimmerElems;
 }
 
-// Fetch loop
-async function fetchNews(){
-  while(keepFetching){
-    try{
-      showShimmer();
+/* ========== CREATE CARD ========== */
+function createNewsCard(news) {
+  const card = document.createElement('div');
+  card.className = 'news-card';
 
-      const res = await fetch(`https://n8n-8ush.onrender.com/webhook/feed?ts=${Date.now()}`, {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Cache-Control':'no-cache',
-          'Pragma':'no-cache'
-        },
-        body: JSON.stringify({ email: userEmail })
-      });
+  let imgHtml = '';
+  if (news.image && news.image.trim()) {
+    // image present
+    imgHtml = `<img src="${news.image}" alt="News">`;
+  } else {
+    // placeholder block so layout stays consistent
+    imgHtml = `<div style="height:50%; background:#1a1a1a; border-radius:18px; margin-bottom:15px;"></div>`;
+  }
 
-      if(!res.ok) throw new Error("Fetch failed");
+  card.innerHTML = `
+    ${imgHtml}
+    <div class="news-title">${escapeHtml(news.headline)}</div>
+    <div class="news-text">${escapeHtml(news.description).slice(0, 220)}${news.description.length > 220 ? '...' : ''}</div>
+    <div class="news-icons">
+      <span class="like" title="Like">❤️</span>
+      <span class="save" title="Save">🔖</span>
+    </div>
+  `;
 
-      const { output } = await res.json();
-      document.querySelectorAll('.shimmer-card.shimmer').forEach(s=>s.remove());
+  // Like/Save handlers
+  const likeBtn = card.querySelector('.like');
+  const saveBtn = card.querySelector('.save');
+  likeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    likeBtn.classList.toggle('liked');
+    sendAction('like', news);
+  });
+  saveBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    saveBtn.classList.toggle('saved');
+    sendAction('save', news);
+  });
 
-      const newBatch = [];
-      for(let i=1;i<=5;i++){
-        const headline = output[`headline${i}`];
-        const desc = output[`news${i}`];
-        if(!headline || !desc) continue;
-        const uniqueKey = headline.trim() + desc.trim();
-        if(shownNewsSet.has(uniqueKey)) continue;
-        shownNewsSet.add(uniqueKey);
-        newBatch.push({
-          headline,
-          description: desc,
-          image: output[`image${i}`] || "",
-          categories: output[`categories${i}`] || "",
-          link: output[`link${i}`] || ""
-        });
-      }
-
-      if(newBatch.length === 0){
-        console.log("⚠️ No new news found, waiting...");
-        await new Promise(r=>setTimeout(r,8000));
-        continue;
-      }
-
-      newBatch.forEach((news, idx)=>{
-        const color = colors[(container.childElementCount + idx) % colors.length];
-        const card=document.createElement('div');
-        card.className='news-card';
-        card.style.background=color.bg;
-        card.style.color=color.text;
-        card.innerHTML=`
-          <img src="${news.image}" alt="News">
-          <div class="news-title">${news.headline}</div>
-          <div class="news-text">${news.description.slice(0,120)}...</div>
-          <div class="news-icons">
-            <span class="like">❤️</span>
-            <span class="save">🔖</span>
-          </div>
-        `;
-        const likeBtn=card.querySelector('.like');
-        const saveBtn=card.querySelector('.save');
-        likeBtn.addEventListener('click',()=>{likeBtn.classList.toggle('liked');sendAction('like',news);});
-        saveBtn.addEventListener('click',()=>{saveBtn.classList.toggle('saved');sendAction('save',news);});
-        container.appendChild(card);
-      });
-
-      // Scale animation
-      const cards=document.querySelectorAll('.news-card');
-      const observer=new IntersectionObserver(entries=>{
-        entries.forEach(entry=>{
-          entry.target.classList.toggle('active',entry.isIntersecting);
-        });
-      },{threshold:0.5});
-      cards.forEach(c=>observer.observe(c));
-
-    }catch(err){
-      console.error("❌ Fetch error:",err);
+  // Open full news and buffer
+  card.addEventListener('click', () => {
+    const win = window.open("fullnews.html");
+    try { win.newsData = news; } catch (e) { /* popup blocked or different origin */ }
+    clickedNewsBuffer.push(news);
+    if (clickedNewsBuffer.length === 3) {
+      sendCurrentFeed(clickedNewsBuffer).then(() => clickedNewsBuffer = []).catch(() => clickedNewsBuffer = []);
     }
-    await new Promise(r=>setTimeout(r,8000));
-  }
+  });
+
+  // observe for activation
+  observer.observe(card);
+
+  return card;
 }
 
-// Like/Save
-async function sendAction(action,news){
-  const urlMap={
-    like:'https://pulse-1-x2sm.onrender.com/like',
-    save:'https://pulse-1-x2sm.onrender.com/save'
+/* simple escape for text inserted as HTML */
+function escapeHtml(str = '') {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+/* ========== FETCH NEWS WITH PAGINATION ========== */
+/**
+ * fetchNews(infinite):
+ *  - if infinite === false -> reset (new category / first load)
+ *  - if infinite === true  -> fetch currentPage
+ */
+async function fetchNews(infinite = true) {
+  if (fetchingInProgress) return;
+  fetchingInProgress = true;
+
+  // Reset for new category or explicit reset
+  if (!infinite) {
+    container.innerHTML = "";
+    shownNewsSet.clear();
+    currentPage = 1;
+    keepFetching = true;
+  }
+
+  // If we've previously determined there's nothing more, bail
+  if (!keepFetching) {
+    fetchingInProgress = false;
+    return;
+  }
+
+  // Show shimmers for the batch
+  const shimmerElems = showShimmer(3);
+
+  try {
+    // Build request body with pagination info
+    const body = { email: userEmail, page: currentPage, pageSize: PAGE_SIZE };
+    if (selectedCategory !== "For You") body.Categories = categoryMap[selectedCategory];
+
+    const res = await fetch(`https://n8n-8ush.onrender.com/webhook/feed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error('Network response was not ok');
+
+    const json = await res.json();
+    const output = json.output || {};
+
+    // Remove shimmers
+    shimmerElems.forEach(s => s.remove());
+
+    // Collect incoming items; server might return variable amount
+    const items = [];
+    for (let i = 1; i <= PAGE_SIZE; i++) {
+      const h = output[`headline${i}`];
+      const n = output[`news${i}`];
+      if (!h || !n) continue;
+      if (String(h).toLowerCase().includes("headline1")) continue; // filter mock
+      items.push({
+        headline: h,
+        description: n,
+        image: output[`image${i}`] || "",
+        categories: output[`categories${i}`] || "",
+        link: output[`link${i}`] || ""
+      });
+    }
+
+    // If no items returned on this page -> stop fetching further
+    if (items.length === 0) {
+      keepFetching = false;
+      // show "no more" once
+      const nm = document.createElement('div');
+      nm.className = 'no-more';
+      nm.innerText = 'No more news in this category.';
+      container.appendChild(nm);
+      fetchingInProgress = false;
+      return;
+    }
+
+    // Append items (filter duplicates)
+    let addedCount = 0;
+    for (const item of items) {
+      const key = (item.headline + '||' + item.description).trim();
+      if (shownNewsSet.has(key)) continue;
+      shownNewsSet.add(key);
+      const card = createNewsCard(item);
+      container.appendChild(card);
+      addedCount++;
+    }
+
+    // If fewer items than page size, assume last page
+    if (items.length < PAGE_SIZE) {
+      keepFetching = false;
+      const nm = document.createElement('div');
+      nm.className = 'no-more';
+      nm.innerText = 'No more news in this category.';
+      container.appendChild(nm);
+    } else {
+      // prepare for next page on next infinite fetch
+      currentPage++;
+    }
+
+  } catch (err) {
+    console.error('❌ Fetch error:', err);
+    // remove shimmers if any left
+    shimmerElems.forEach(s => s.remove());
+    // optionally show a friendly error message
+    const errEl = document.createElement('div');
+    errEl.className = 'no-more';
+    errEl.innerText = 'Could not load news. Check your connection or try again.';
+    container.appendChild(errEl);
+    // stop further automatic fetching (optionally keep true to retry)
+    keepFetching = false;
+  }
+
+  fetchingInProgress = false;
+}
+
+/* ========== ACTIONS: like/save + sendCurrentFeed ========== */
+async function sendAction(action, news) {
+  const urlMap = {
+    like: 'https://pulse-1-x2sm.onrender.com/like',
+    save: 'https://pulse-1-x2sm.onrender.com/save'
   };
-  try{
-    await fetch(urlMap[action],{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email:userEmail,
-        headline:news.headline,
-        news:news.description,
-        url:news.link,
-        image_url:news.image,
-        categories:news.categories
+  try {
+    await fetch(urlMap[action], {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        headline: news.headline,
+        news: news.description,
+        url: news.link,
+        image_url: news.image,
+        categories: news.categories
       })
     });
-  }catch(err){console.error("Action failed:",err);}
+  } catch (e) {
+    console.error('Action failed:', e);
+  }
 }
 
-// Footer navigation
-document.querySelectorAll('footer i').forEach(icon=>{
-  icon.addEventListener('click',()=>{
-    document.querySelectorAll('footer i').forEach(i=>i.classList.remove('active'));
-    icon.classList.add('active');
+async function sendCurrentFeed(buffer) {
+  const payload = {};
+  buffer.forEach((item, i) => {
+    const idx = i + 1;
+    payload[`image${idx}`] = item.image || "";
+    payload[`headline${idx}`] = item.headline || "";
+    payload[`news${idx}`] = item.description || "";
+    payload[`link${idx}`] = item.link || "";
+  });
+  try {
+    await fetch('https://n8n-8ush.onrender.com/webhook/currentfeed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    console.log('✅ Sent currentfeed', payload);
+  } catch (e) {
+    console.error('❌ Error sending currentfeed', e);
+  }
+}
 
-    if(icon.classList.contains('home')){
-      keepFetching=true;
-      fetchNews();
-    } else if(icon.classList.contains('search')){
-      keepFetching=false;
-      window.location.href='search.html';
-    } else if(icon.classList.contains('bookmark')){
-      keepFetching=false;
-      window.location.href='bookmark.html';
+/* ========== UI: footer nav, category clicks, header heart ========== */
+document.querySelectorAll('footer i').forEach(icon => {
+  icon.addEventListener('click', () => {
+    document.querySelectorAll('footer i').forEach(i => i.classList.remove('active'));
+    icon.classList.add('active');
+    if (icon.classList.contains('home')) {
+      keepFetching = true;
+      fetchNews(false);
+    } else if (icon.classList.contains('search')) {
+      keepFetching = false;
+      window.location.href = 'search.html';
+    } else if (icon.classList.contains('bookmark')) {
+      keepFetching = false;
+      window.location.href = 'bookmark.html';
     }
   });
 });
 
-// Initial start
-fetchNews();
+categoryItems.forEach(item => {
+  item.addEventListener('click', () => {
+    // UI toggle
+    categoryItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    // set category and reset paging/state
+    selectedCategory = item.innerText;
+    currentPage = 1;
+    keepFetching = true;
+    shownNewsSet.clear();
+    container.innerHTML = "";
+
+    // center the clicked category
+    const itemRect = item.getBoundingClientRect();
+    const barRect = categoryBar.getBoundingClientRect();
+    const scrollOffset = itemRect.left - barRect.left - (barRect.width / 2) + (itemRect.width / 2);
+    categoryBar.scrollBy({ left: scrollOffset, behavior: 'smooth' });
+
+    // fetch fresh feed for chosen category
+    fetchNews(false);
+  });
+});
+
+// header heart animation
+document.getElementById('header-heart').addEventListener('click', () => {
+  const btn = document.getElementById('header-heart');
+  btn.classList.toggle('active');
+  btn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+});
+
+/* ========== SCROLL: infinite fetch ========== */
+// Use scroll event on container with small threshold
+container.addEventListener('scroll', () => {
+  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 150) {
+    if (keepFetching && !fetchingInProgress) {
+      fetchNews(true);
+    }
+  }
+});
+
+/* ========== INITIAL LOAD ========== */
+fetchNews(false);
 </script>
 </body>
 </html>
