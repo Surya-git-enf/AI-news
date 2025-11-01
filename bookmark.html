@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bookmark — SLIDE</title>
+<title>liked — SLIDE</title>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -12,7 +12,7 @@
     --muted:rgba(255,255,255,0.72);
     --white:#ffffff;
     --gap:12px;
-    --card-height:120px; /* default comfortable height */
+    --card-height:120px; /* increased card height for clearer layout */
   }
   *{box-sizing:border-box;}
   html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:"Poppins",sans-serif;-webkit-font-smoothing:antialiased;}
@@ -27,7 +27,7 @@
   }
   header h1{ font-family:"Pacifico",cursive; color:var(--white); font-size:20px; margin:0; text-align:center; flex:1; pointer-events:none; }
 
-  /* MAIN LIST: fixed under header and scrollable */
+  /* LIST: fixed under header and fully scrollable (important for mobile) */
   .list {
     position:fixed;
     top:64px;
@@ -44,19 +44,19 @@
     background: transparent;
   }
 
-  /* Card: image left, text vertically centred */
+  /* Card: horizontally aligned, image left, text centered vertically */
   .card{
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 14px;
     background: var(--card);
     border-radius:12px;
     overflow: hidden;
     border:1px solid rgba(255,255,255,0.04);
     cursor: pointer;
     transition: transform .12s ease, box-shadow .12s ease;
-    align-items: center; /* vertical centering */
-    padding: 5px;
+    align-items: center; /* vertical centering of image + text */
+    padding: 12px;
     min-height: var(--card-height);
     max-height: var(--card-height);
     color: var(--white);
@@ -65,17 +65,16 @@
   .card:focus, .card:hover{ transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.5); outline: none; }
 
   .card-media {
-    flex: 0 0 120px;
-    height: 120px;
-    width:150px;
+    flex: 0 0 120px; /* fixed media width */
+    height: 96px;    /* give image some padding inside card */
     border-radius: 8px;
     overflow: hidden;
     background:#111;
     display:flex; align-items:center; justify-content:center;
   }
   .card-media img{
-    width: 170px;
-    height: 120px;
+    width: 120px;
+    height: 96px;
     object-fit: cover;
     display: block;
     border-radius: 6px;
@@ -85,9 +84,9 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    justify-content: center;
+    gap: 6px;
+    min-width: 0; /* allow truncation */
+    justify-content: center; /* vertically center text block */
   }
 
   .headline{
@@ -112,15 +111,15 @@
     overflow:hidden;
     display:-webkit-box;
     -webkit-box-orient:vertical;
-    -webkit-line-clamp:2; /* show two lines preview */
+    -webkit-line-clamp:2; /* show 2 lines of preview under headline */
   }
 
-  /* hide categories visually but keep in DOM/payload */
+  /* hide categories from UI but keep layout placeholder for stability */
   .meta-row { display:block; height:0; visibility:hidden; margin-top:auto; }
 
   .empty{ text-align:center; color:var(--muted); margin:70px 20px; font-size:16px; }
 
-  /* gradients */
+  /* Light pastel gradients */
  .gradient-0 { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); }
 .gradient-1 { background: linear-gradient(135deg, #232526 0%, #414345 100%); }
 .gradient-2 { background: linear-gradient(135deg, #141e30 0%, #243b55 100%); }
@@ -140,27 +139,20 @@
   .list::-webkit-scrollbar{ width:10px; }
   .list::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.04); border-radius:8px; }
 
-  /* Compact mode styles (applied when many items exist) */
-  .list.compact { gap:8px; padding:10px; }
-  .list.compact .card { min-height:86px; max-height:86px; padding:10px; border-radius:10px; }
-  .list.compact .card-media { flex:0 0 88px; height:64px; }
-  .list.compact .card-media img { width:88px; height:64px; border-radius:6px; }
-  .list.compact .headline { font-size:15px; }
-  .list.compact .desc { font-size:13px; -webkit-line-clamp:2; }
-
-  /* responsive tweaks */
+  /* responsive: reduce card height on narrow screens but keep center alignment */
   @media (max-width:420px){
     :root { --card-height:110px; }
     .card-media { flex:0 0 96px; height:72px; }
     .card-media img{ width:96px; height:72px; }
-    .headline{ font-size:16px; }
-    .desc{ font-size:13px; }
+    .headline{ font-size:16px; -webkit-line-clamp:1; }
+    .desc{ font-size:13px; -webkit-line-clamp:2; }
   }
   @media (max-width:360px){
     :root { --card-height:100px; }
     .card-media { flex:0 0 88px; height:64px; }
     .card-media img{ width:88px; height:64px; }
     .headline{ font-size:15px; }
+    .desc{ font-size:13px; -webkit-line-clamp:2; }
   }
 </style>
 </head>
@@ -171,7 +163,7 @@
         <path d="M15 18l-6-6 6-6"/>
       </svg>
     </button>
-    <h1>bookmark</h1>
+    <h1>liked</h1>
     <div style="width:44px;"></div>
   </header>
 
@@ -183,10 +175,10 @@
 const FALLBACK = {
   image: "https://static.toiimg.com/thumb/msid-124411047,width-1070,height-580,imgsize-831703,resizemode-75,overlay-toi_sw,pt-32,y_pad-40/photo.jpg",
   headline: "Neuroscientist Unveils Simple Techniques to Enhance Workplace Focus and Calm",
-  description: `In an increasingly demanding professional landscape, many individuals grapple with burnout and a lack of focus. NYU neuroscientist Dr. Wendy Suzuki offers two straightforward, science-backed methods to cultivate greater concentration, motivation, and tranquility at work.\n\nHer approach centers on simple micro-habits: brief aerobic movement, breathwork, and short mindful pauses throughout the day that reshape neural circuits and reduce stress.`,
+  description: `In an increasingly demanding professional landscape, many individuals grapple with burnout and a lack of focus. NYU neuroscientist Dr. Wendy Suzuki offers two straightforward, science-backed methods to cultivate greater concentration, motivation, and tranquility at work.\n\nHer approach centers on simple micro-habits: brief aerobic movement, breathwork, and short mindful pauses throughout the day that reshape neural circuits and reduce stress.\n\nAdopting these small practices consistently can improve attention, mood, and long-term resilience.`,
   link: "https://timesofindia.indiatimes.com/",
   categories: "Science, Health",
-  bookmark: true
+  liked: true
 };
 
 function escapeHtml(s=''){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
@@ -199,9 +191,9 @@ function getEmail(){
 }
 const USER_EMAIL = getEmail();
 
-/* back button behavior */
+/* back button */
 document.getElementById('backBtn').addEventListener('click', () => {
-  if (document.referrer && !document.referrer.includes('bookmark.html')) {
+  if (document.referrer && !document.referrer.includes('liked.html')) {
     location.href = document.referrer;
   } else if (history.length > 1) {
     history.back();
@@ -211,7 +203,7 @@ document.getElementById('backBtn').addEventListener('click', () => {
 });
 
 /* shimmer loader */
-function showShimmer(count=6){
+function showShimmer(count=5){
   const list=document.getElementById('list');
   list.innerHTML='';
   for(let i=0;i<count;i++){
@@ -232,10 +224,10 @@ function hideShimmer(){
   list.querySelectorAll('.skeleton-card').forEach(el=>el.remove());
 }
 
-/* robust fetchbookmark (n8n wrapper forwarding) */
-async function fetchbookmark(email){
+/* robust fetchLiked (n8n wrapper forwarding) */
+async function fetchLiked(email){
   if (!email) throw new Error('No email available');
-  const wrapper = { link: "https://pulse-1-sq0g.onrender.com/getsaved", method: "GET", body: { email: email } };
+  const wrapper = { link: "https://pulse-1-sq0g.onrender.com/getliked", method: "GET", body: { email: email } };
   try {
     const r = await fetch("https://n8n-8ush.onrender.com/webhook/request", {
       method: 'POST',
@@ -248,32 +240,39 @@ async function fetchbookmark(email){
     }
     const text = await r.text();
 
-    // parsing attempts (handles double-escaped JSON)
+    // Try parse once
     let parsed;
     try { parsed = JSON.parse(text); }
     catch(e){
+      // sometimes the payload is double-escaped
       try { parsed = JSON.parse(text.replace(/\\"/g,'"')); }
       catch(e2){ parsed = text; }
     }
 
+    // Normalize common shapes
     if (Array.isArray(parsed)) {
       return parsed.map(it => {
         if (typeof it === 'string') {
-          try { return JSON.parse(it); } catch(_) { 
-            try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(_) { return { headline: it }; }
-          }
+          try { return JSON.parse(it); } catch(_) { try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(_) { return { headline: it }; } }
         }
         return it;
       });
     }
 
     if (parsed && typeof parsed === 'object') {
+      // support .liked or .saved arrays
+      if (Array.isArray(parsed.liked)) {
+        return parsed.liked.map(s => {
+          if (typeof s === 'string') {
+            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; } }
+          }
+          return s;
+        });
+      }
       if (Array.isArray(parsed.saved)) {
         return parsed.saved.map(s => {
           if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){
-              try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; }
-            }
+            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; } }
           }
           return s;
         });
@@ -283,14 +282,13 @@ async function fetchbookmark(email){
 
     return parsed;
   } catch (err) {
-    console.warn('fetchbookmark failed, using fallback', err);
+    console.warn('fetchLiked failed, using fallback', err);
     return [FALLBACK];
   }
 }
 
-/* createCard: categories included in payload but not shown */
+/* createCard: categories kept in payload but NOT shown */
 function createCard(item, index=0){
-  // normalize keys
   const headline = item.headline || item.title || item.headlineText || item.name || '';
   const desc = item.news || item.description || item.summary || item.desc || item.body || '';
   const img = item.image_url || item.image || item.img || item.imageUrl || '';
@@ -321,7 +319,7 @@ function createCard(item, index=0){
       image: img,
       link: link,
       categories: Array.isArray(categories) ? categories : (typeof categories === 'string' ? categories.split(',').map(s=>s.trim()).filter(Boolean) : []),
-      bookmark: true
+      liked: true
     };
     try { sessionStorage.setItem('fullnews_data', JSON.stringify(payload)); } catch(e){ console.warn('sessionStorage failed', e); }
     const q = USER_EMAIL ? `?email=${encodeURIComponent(USER_EMAIL)}` : '';
@@ -335,37 +333,30 @@ function createCard(item, index=0){
   return card;
 }
 
-/* init / render with compact mode behavior */
-(async function init(){
+/* loadLiked: robust normalization and rendering (same logic as bookmark) */
+async function loadLiked({ showLoader = true } = {}) {
   const list = document.getElementById('list');
   const empty = document.getElementById('empty');
-
-  showShimmer(6);
-
-  if (!USER_EMAIL) {
-    hideShimmer();
-    list.innerHTML = '';
-    list.appendChild(createCard(FALLBACK, 0));
-    return;
-  }
-
   try {
-    const res = await fetchbookmark(USER_EMAIL);
+    if (showLoader) showShimmer(6);
+    if (!USER_EMAIL) {
+      hideShimmer();
+      list.innerHTML = '';
+      list.appendChild(createCard(FALLBACK, 0));
+      return;
+    }
+    const res = await fetchLiked(USER_EMAIL);
 
-    // normalization block
+    // normalization
     let items = [];
-    if (Array.isArray(res)) {
-      items = res;
-    } else if (res && typeof res === 'object') {
+    if (Array.isArray(res)) items = res;
+    else if (res && typeof res === 'object') {
       if (Array.isArray(res.items)) items = res.items;
       else if (Array.isArray(res.output)) items = res.output;
-      else if (Array.isArray(res.saved)) {
-        items = res.saved.map(s => {
-          if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(_) { return { headline: s }; } }
-          }
-          return s;
-        });
+      else if (Array.isArray(res.liked)) {
+        items = res.liked;
+      } else if (Array.isArray(res.saved)) {
+        items = res.saved;
       } else {
         for (let i=1;i<60;i++){
           const h = res[`headline${i}`]; const n = res[`news${i}`];
@@ -384,7 +375,6 @@ function createCard(item, index=0){
       }
     }
 
-    // parse string entries if needed
     items = items.map(it => {
       if (typeof it === 'string') {
         try { return JSON.parse(it); } catch(e){ try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(e2){ return { headline: it }; } }
@@ -403,21 +393,22 @@ function createCard(item, index=0){
       empty.style.display = 'none';
     }
 
-    // If many items, enable compact mode
-    if (items.length > 12) {
-      list.classList.add('compact');
-    } else {
-      list.classList.remove('compact');
-    }
-
+    // Append all items — the list is scrollable so many items work fine
     items.forEach((it, idx) => list.appendChild(createCard(it, idx)));
-  } catch (e) {
-    console.error('init fetch bookmark failed', e);
+    return true;
+  } catch (err) {
+    console.error('loadLiked failed', err);
     hideShimmer();
     list.innerHTML = '';
     list.appendChild(createCard(FALLBACK, 0));
+    return false;
   }
-})();
+}
+
+/* init on DOMContentLoaded to avoid blank-screen race issues */
+document.addEventListener('DOMContentLoaded', () => {
+  loadLiked({ showLoader: true });
+});
 </script>
 </body>
 </html>
