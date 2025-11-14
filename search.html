@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Nova — Chat (Proxy)</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040406;
+  --panel:#0b0c0f;
+  --muted:#98a3ad;
+  --accent:#00d1ff;
+  --accent-2:#6b00ff;
+  --glass:rgba(255,255,255,0.04);
+  --card:#0f1113;
+  --user-blue:#0077d1;
+  --max-img-size:min(84vw,420px);
+  --input-bg: rgba(255,255,255,0.06);
+  --input-shadow: rgba(255,255,255,0.06);
+  --gem-white: rgba(255,255,255,0.5);
+  --vibrant-1: linear-gradient(90deg,#00d1ff,#6b00ff);
+  --radius:12px;
+}
+
+/* base */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Roboto,Arial;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+header{height:66px;display:flex;align-items:center;justify-content:center;position:fixed;left:0;right:0;top:0;background:linear-gradient(90deg,#6b00ff,#0b1420);z-index:80;padding:0 16px;border-bottom-right-radius:30px;border-bottom-left-radius:30px;}
+.header-left{position:absolute;left:12px;display:flex;align-items:center;gap:10px}
+.header-center{display:flex;align-items:center;gap:10px;font-family:'Russo One', Inter, sans-serif}
+.header-title{font-size:18px;color:#fff;letter-spacing:0.6px}
+.header-clock{display:none;align-items:center;gap:8px;color:#fff;opacity:0.95}
+.header-right{position:absolute;right:12px;display:flex;align-items:center;gap:12px}
+
+/* icon buttons */
+.icon-btn{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--glass);cursor:pointer}
+.icon-btn.plain{border:0;padding:6px}
+
+/* layout */
+.container{display:flex;height:100vh;padding-top:66px;overflow:hidden}
+.chat-area{flex:1;display:flex;flex-direction:column;padding:18px;gap:12px;overflow:hidden}
+
+/* messages area */
+.messages{flex:1;overflow:auto;padding:6px 16px 180px 16px;display:flex;flex-direction:column;gap:12px}
+.msg{padding:12px 16px;border-radius:12px;line-height:1.45;word-break:break-word;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+.msg.user{align-self:flex-end;background:var(--user-blue);color:#fff;max-width:64%}
+.msg.bot{align-self:flex-start;background:linear-gradient(180deg,#08090b,#131318);border:1px solid rgba(255,255,255,0.03);color:#e7f7ff;max-width:92%}
+
+/* increase bot width visually */
+.msg.bot{width:fit-content;min-width:40%;}
+
+/* images: square shimmer then image */
+.img-block{width:var(--max-img-size);height:var(--max-img-size);max-width:100%;aspect-ratio:1/1;display:block;border-radius:10px;overflow:hidden;position:relative;margin-top:10px}
+.img-block img.preview{width:100%;height:100%;object-fit:cover;display:block;border-radius:10px;cursor:pointer}
+.img-skel{position:absolute;inset:0;background:#0f1113;display:flex;align-items:center;justify-content:center}
+.img-skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 100%);background-size:400px 100%;animation:shimmer 1s linear infinite}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+
+/* image modal (polished) */
+.image-modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(4,4,6,0.9), rgba(0,0,0,0.95));display:none;z-index:1000;align-items:center;justify-content:center;padding:24px}
+.image-modal-card{position:relative;max-width:1100px;width:100%;max-height:92vh;border-radius:14px;padding:18px;background:linear-gradient(180deg, rgba(12,12,14,0.95), rgba(6,6,8,0.95));box-shadow:0 40px 120px rgba(0,0,0,0.7);display:flex;flex-direction:column;align-items:center;gap:12px}
+.image-modal-img{max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px}
+.image-modal-actions{display:flex;gap:10px}
+.image-btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff;cursor:pointer}
+
+/* input - Gemini-like gem box */
+.input-wrap{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;width:calc(100% - 48px);max-width:980px;z-index:90; b}
+.input-card{display:flex;align-items:flex-end;gap:10px;padding:8px;border-radius:28px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01););backdrop-filter: blur(6px);box-shadow:0 6px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02); bottom:50px;box-shadow:0 -10px 30px  rgba(6,255,255,0.5)}
+.input-inner{flex:1;border-radius:18px;padding:8px 12px;background:rgba(255,255,255,0.06);box-shadow:0 8px 24px rgba(6,6,8,0.7) inset;border:1px solid rgba(255,255,255,0.02)}
+textarea#messageInput{width:100%;background:transparent;border:0;outline:none;color:#fff;font-size:15px;height:auto;resize:none;line-height:1.25;max-height:calc(1.25em*3 + 26px);padding:6px 4px;}
+
+/* send button */
+.send-btn{width:52px;height:52px;border-radius:14px;border:none;background:var(--vibrant-1);color:#021;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(107,0,255,0.18)}
+
+/* side panel */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:none}
+.side-panel{position:fixed;right:0;top:66px;bottom:0;width:420px;background:linear-gradient(180deg,#06060a,#08070a);border-left:1px solid rgba(255,255,255,0.02);transform:translateX(110%);transition:transform .28s cubic-bezier(.2,.9,.2,1);z-index:220;display:flex;flex-direction:column}
+.side-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,0.02);gap:12px;position:sticky;top:0;background:linear-gradient(180deg,#06060a,#08070a);z-index:10}
+.panel-title{flex:1;text-align:center;font-weight:700}
+.panel-search{margin:12px;padding:10px;border-radius:12px;background:#0f1113;border:1px solid rgba(255,255,255,0.02);color:#cbd5df}
+.panel-list{padding:12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px}
+
+/* skeleton shimmering entries */
+.skel{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));}
+.skel .avatar{width:44px;height:44px;border-radius:10px;background:#0d0f11;position:relative;overflow:hidden}
+.skel .meta{flex:1}
+.skel .line{height:10px;border-radius:6px;background:#0d0f11;margin-bottom:8px;position:relative;overflow:hidden}
+.skel .line.full{width:78%}
+.skel .line.short{width:36%}
+.skel .avatar::after, .skel .line::after{content:"";position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 100%);background-size:400px 100%;animation:shimmer 1s linear infinite}
+
+/* conv item */
+.conv-item{
+  position: relative; /* Needed for absolute positioning of delete */
+  display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;background:transparent;cursor:pointer;transition:background .12s;
+  /* Add slight transform to suggest swiping/action area */
+  transform: translateX(0); transition: transform 0.2s ease-out, background 0.12s;
+}
+.conv-item:hover{background:rgba(255,255,255,0.02); transform: translateX(-4px); } /* Slight hover effect */
+.conv-left{display:flex;flex-direction:column;gap:4px;max-width:78%}
+.conv-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-actions{display:flex;gap:8px;align-items:center}
+.edit-icon, .delete-icon{background:transparent;border:0;padding:6px;cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center; transition: opacity 0.1s;}
+.edit-icon svg, .delete-icon svg{width:16px;height:16px;opacity:0.95}
+.delete-icon{color: #ff6666;} /* Red color for delete icon */
+
+/* rename modal - vibrant and modern */
+.rename-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;z-index:310;align-items:center;justify-content:center;padding:12px}
+.rename-modal{width:clamp(340px,44vw,540px);background:linear-gradient(180deg,#0f0f14,#0b0712);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#fff}
+.rename-modal h3{margin:0 0 8px 0;font-size:18px}
+.rename-input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.02);color:#fff;outline:none}
+.rename-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.rename-btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer}
+.rename-btn.cancel{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#ddd}
+.rename-btn.save{background:var(--vibrant-1);color:#021}
+
+/* typing dots */
+.typing-dots{display:inline-block;height:18px;}
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#bcdffd;margin:0 4px;opacity:0.25;transform:translateY(0);animation:dot 1s infinite;}
+.typing-dots span:nth-child(1){animation-delay:0s}
+.typing-dots span:nth-child(2){animation-delay:.12s}
+.typing-dots span:nth-child(3){animation-delay:.24s}
+@keyframes dot{0%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-6px)}100%{opacity:.25;transform:translateY(0)}}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;background:linear-gradient(90deg,#101219,#0b0b0b);padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);z-index:900;display:none}
+
+/* responsive */
+@media(max-width:640px){
+  .side-panel{width:320px}
+  .input-wrap{width:calc(100% - 32px)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <button id="backBtn" class="icon-btn" title="Back" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="header-center" style="gap:18px;">
+    <div class="header-title">Slide</div>
+
+    <div class="header-clock" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button id="openPanelBtn" class="icon-btn" title="Open conversations" aria-label="Open conversations">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="chat-area">
+    <div id="messages" class="messages">
+      <div class="msg bot">👋 <b>Nova</b> — Hi! Try: <em>"latest on JWST"</em></div>
+    </div>
+  </div>
+
+  <div class="panel-overlay" id="panelOverlay"></div>
+  <aside id="sidePanel" class="side-panel" aria-hidden="true">
+    <div class="panel-header">
+      <button id="panelNewChatBtn" class="icon-btn plain" title="New chat" aria-label="New chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="4" width="14" height="14" rx="2"></rect><path d="M14 3l4 4"></path><path d="M11 14l4-4"></path></svg>
+      </button>
+
+      <div class="panel-title">Conversations</div>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="closePanel" class="icon-btn" title="Close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <input id="searchBox" class="panel-search" placeholder="Search conversations — e.g. nasa, stranger things" />
+    <div id="convList" class="panel-list" role="list"></div>
+  </aside>
+</div>
+
+<div id="imageModal" class="image-modal-backdrop" role="dialog" aria-modal="true">
+  <div class="image-modal-card">
+    <img id="imageModalImg" class="image-modal-img" src="" alt="full image">
+    <div class="image-modal-actions">
+      <button id="imageDownloadBtn" class="image-btn">Download</button>
+      <button id="imageCloseBtn" class="image-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="renameModal" class="rename-modal-backdrop" role="dialog" aria-modal="true" style="display:none">
+  <div class="rename-modal">
+    <h3>Rename conversation</h3>
+    <input id="renameInput" class="rename-input" placeholder="Enter conversation name">
+    <div id="renameError" style="color:#ff9aa2;margin-top:8px;display:none"></div>
+    <div class="rename-actions">
+      <button id="renameCancel" class="rename-btn cancel">Cancel</button>
+      <button id="renameSave" class="rename-btn save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="input-wrap">
+  <div class="input-card">
+    <div class="input-inner">
+      <textarea id="messageInput" rows="1" placeholder="Ask Nova anything — e.g. 'Any updates on JWST?'" autocomplete="off"></textarea>
+    </div>
+    <button id="sendBtn" class="send-btn" title="Send">➤</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ===== CONFIG ===== */
+const USER_EMAIL = (new URLSearchParams(window.location.search)).get('email') || "s8296659@gmail.com";
+const N8N_PROXY = "https://n8n-8ush.onrender.com/webhook/request";
+const PLAYABLE_BASE = "https://playable-36ab.onrender.com".replace(/\/$/,'');
+const ENDPOINTS = {
+  list: PLAYABLE_BASE + "/list_chats",
+  get: PLAYABLE_BASE + "/get_chat",
+  append: PLAYABLE_BASE + "/append_chat",
+  rename: PLAYABLE_BASE + "/rename_chat",
+  delete: PLAYABLE_BASE + "/delete_chat",
+  chat_direct: "https://n8n-8ush.onrender.com/webhook/chat"
+};
+
+/* UI refs */
+const openPanelBtn = document.getElementById('openPanelBtn');
+const panel = document.getElementById('sidePanel');
+const panelOverlay = document.getElementById('panelOverlay');
+const panelNewChatBtn = document.getElementById('panelNewChatBtn');
+const closePanelBtn = document.getElementById('closePanel');
+const convList = document.getElementById('convList');
+const searchBox = document.getElementById('searchBox');
+
+const messagesEl = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+
+const imageModal = document.getElementById('imageModal');
+const imageModalImg = document.getElementById('imageModalImg');
+const imageDownloadBtn = document.getElementById('imageDownloadBtn');
+const imageCloseBtn = document.getElementById('imageCloseBtn');
+
+const renameModal = document.getElementById('renameModal');
+const renameInput = document.getElementById('renameInput');
+const renameSave = document.getElementById('renameSave');
+const renameCancel = document.getElementById('renameCancel');
+const renameError = document.getElementById('renameError');
+
+const backBtn = document.getElementById('backBtn');
+const toast = document.getElementById('toast');
+
+let conversations = []; // parsed history [{name,messages:[]}, ...]
+let currentConv = null; // null = new unnamed conversation
+let editingConv = null;
+
+/* tiny helpers */
+function el(tag, cls){ const d=document.createElement(tag); if(cls) d.className=cls; return d; }
+function showToast(text, ms=1500){ toast.textContent = text; toast.style.display='block'; setTimeout(()=>{ toast.style.opacity='1'; },10); setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.style.display='none',220); }, ms); }
+function scrollToBottom(){ try{ messagesEl.scrollTop = messagesEl.scrollHeight; }catch(e){} }
+
+/* ===== proxy helper ===== */
+async function proxyRequest(targetLink, method, body){
+  const envelope = { link: targetLink, method: method.toUpperCase(), body: body || {} };
+  const r = await fetch(N8N_PROXY, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(envelope) });
+  if(!r.ok) throw new Error('Proxy failed: ' + r.status);
+  const txt = await r.text();
+  try{ return JSON.parse(txt); } catch(e){ return txt; }
+}
+
+/* API wrappers */
+async function apiListChats(){ try{ return await proxyRequest(ENDPOINTS.list, 'POST', { email: USER_EMAIL }); }catch(e){ const link = ENDPOINTS.list + "?email=" + encodeURIComponent(USER_EMAIL); return await proxyRequest(link,'GET',{}); } }
+async function apiGetChat(name){ return await proxyRequest(ENDPOINTS.get, 'POST', { email: USER_EMAIL, conversation_name: name }); }
+async function apiAppendMessage(name, sender, message){ const element = {}; element[name] = { "messages": [ { [sender]: message } ] }; const element_json_string = JSON.stringify(element); return await proxyRequest(ENDPOINTS.append, 'POST', { user_email: USER_EMAIL, conversation_name: name, element_json_string: element_json_string }); }
+async function apiRename(oldName, newName){ return await proxyRequest(ENDPOINTS.rename, 'POST', { user_email: USER_EMAIL, old_name: oldName, new_name: newName }); }
+async function apiDelete(name){ return await proxyRequest(ENDPOINTS.delete, 'POST', { user_email: USER_EMAIL, conversation_name: name }); }
+async function apiN8nChat(convName, message){ return await proxyRequest(ENDPOINTS.chat_direct, 'POST', { userEmail: USER_EMAIL, message: message, conversationName: convName || "" }); }
+
+/* URL & image detection */
+const urlRegex = /(https?:\/\/[^\s"<>'`]+)/g;
+const imgExtRegex = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i;
+
+/* Render message with link/image handling (shimmer shown while loading) */
+function renderMessageElement(text, cls='bot', sender){
+  const wrapper = el('div', 'msg ' + (cls === 'user' ? 'user' : 'bot'));
+  if(sender) wrapper.dataset.sender = sender;
+
+  const parts = String(text || '').split(urlRegex).filter(Boolean);
+  parts.forEach(part => {
+    if(urlRegex.test(part)){
+      if(imgExtRegex.test(part)){
+        const block = el('div','img-block');
+        const skel = el('div','img-skel');
+        block.appendChild(skel);
+        wrapper.appendChild(block);
+
+        const img = new Image();
+        img.className = 'preview';
+        img.style.display = 'none';
+        img.alt = 'image';
+        img.src = part;
+        img.onload = () => { skel.remove(); img.style.display = 'block'; };
+        img.onerror = () => {
+          skel.remove();
+          const a = el('a'); a.href = part; a.target = '_blank'; a.rel='noopener noreferrer'; a.textContent = part;
+          wrapper.appendChild(a); block.remove();
+        };
+        img.addEventListener('click', ()=> openImageModal(part));
+        block.appendChild(img);
+      } else {
+        const a = el('a'); a.href = part; a.target = '_blank'; a.rel='noopener noreferrer'; a.textContent = part;
+        wrapper.appendChild(a);
+      }
+    } else {
+      const lines = part.split('\n');
+      lines.forEach((ln, i) => {
+        wrapper.appendChild(document.createTextNode(ln));
+        if(i < lines.length - 1) wrapper.appendChild(document.createElement('br'));
+      });
+    }
+  });
+
+  return wrapper;
+}
+
+/* typing bubble node */
+function createTypingBubble(){ const b = el('div','msg bot'); b.innerHTML = `<span class="typing-dots"><span></span><span></span><span></span></span>`; return b; }
+
+/* Panel list rendering (newest-first: reverse slice) */
+function renderConvList(listToRender = conversations){
+  convList.innerHTML = '';
+  // Show newest first
+  const list = listToRender.slice().reverse();
+
+  if(list.length === 0){
+    const p = el('div'); p.style.padding='12px'; p.style.color='var(--muted)'; p.textContent = 'No conversations found.';
+    convList.appendChild(p); return;
+  }
+  
+  list.forEach(c=>{
+    const item = el('div','conv-item');
+    if(currentConv === c.name) item.classList.add('selected');
+
+    const left = el('div','conv-left');
+    const title = el('div','conv-name'); title.textContent = c.name || '(untitled)';
+    left.appendChild(title);
+
+    const actions = el('div','conv-actions');
+    
+    // RENAME BUTTON
+    const editBtn = el('button','edit-icon'); editBtn.title='Rename';
+    editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"></path><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>`;
+
+    // DELETE BUTTON (for the "swiped" effect/action)
+    const deleteBtn = el('button','delete-icon'); deleteBtn.title='Delete';
+    deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff6666" stroke-width="1.6"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn); // Add delete button
+    item.appendChild(left);
+    item.appendChild(actions);
+    convList.appendChild(item);
+
+    // Click to open conversation
+    item.addEventListener('click', async (ev)=>{
+      if(ev.target.closest('.edit-icon') || ev.target.closest('.delete-icon')) return;
+      document.querySelectorAll('.conv-item.selected').forEach(n=>n.classList.remove('selected'));
+      item.classList.add('selected');
+      currentConv = c.name;
+      await openConversation(c.name);
+      closePanel();
+    });
+
+    // Rename Handler
+    editBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); editingConv = c.name; renameInput.value = c.name || ''; renameError.style.display='none'; renameModal.style.display='flex'; renameInput.focus(); });
+    
+    // Delete Handler
+    deleteBtn.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();
+      if(!confirm(`Are you sure you want to delete conversation: "${c.name || '(untitled)'}"?`)) return;
+
+      try{
+        await apiDelete(c.name);
+        if(currentConv === c.name) {
+          currentConv = null;
+          // Restart chat area as if new chat was clicked
+          messagesEl.innerHTML = '';
+          messagesEl.appendChild(renderMessageElement("👋 <h2>Nova</h2> — Conversation deleted. Start a new chat!", 'bot', 'Nova'));
+          autoSizeTextarea();
+        }
+        showToast('Deleted ✅');
+        await loadList(); // Reload list to reflect changes
+      }catch(e){
+        showToast('Deletion failed, try again ');
+        console.error('Delete error', e);
+      }
+    });
+  });
+}
+
+/* skeleton list for panel */
+function renderSkeletonList(){ convList.innerHTML=''; for(let i=0;i<6;i++){ const s = el('div','skel'); const av = el('div','avatar'); s.appendChild(av); const meta = el('div','meta'); const line1 = el('div','line full'); const line2 = el('div','line short'); meta.appendChild(line1); meta.appendChild(line2); s.appendChild(meta); convList.appendChild(s); } }
+
+/* load list from backend (robust shapes) */
+async function loadList(){
+  try{
+    renderSkeletonList();
+    const resp = await apiListChats();
+    let parsed = [];
+    if(resp && typeof resp === 'object'){
+      if(Array.isArray(resp.chat_history)) parsed = parseHistoryArray(resp.chat_history);
+      else if(Array.isArray(resp)) parsed = parseHistoryArray(resp);
+      else if(resp.conversations && Array.isArray(resp.conversations)) parsed = resp.conversations.map(n=>({name:n,messages:[]}));
+      else {
+        try{ const maybe = parseHistoryArray(Object.values(resp)); if(maybe.length) parsed = maybe; }catch(e){}
+      }
+    } else if(Array.isArray(resp)) parsed = parseHistoryArray(resp);
+    conversations = parsed;
+    renderConvList(conversations); // Render full list initially
+  }catch(e){
+    console.error('loadList', e);
+    convList.innerHTML = `<div style="padding:12px;color:var(--muted)">Failed to load</div>`;
+  }
+}
+
+/* parse stored chat_history array-of-strings */
+function parseHistoryArray(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [];
+  for(const it of arr){
+    try{
+      const obj = (typeof it === 'string') ? JSON.parse(it) : it;
+      if(obj && typeof obj === 'object'){
+        const key = Object.keys(obj)[0];
+        const msgs = (obj[key] && obj[key].messages) ? obj[key].messages : [];
+        out.push({ name: key, messages: msgs });
+      }
+    }catch(e){
+      console.warn('parseHistoryArray skip', e, it);
+    }
+  }
+  return out;
+}
+
+/* openConversation - render messages incl. images and shimmers */
+async function openConversation(name){
+  messagesEl.innerHTML = '';
+  const loadingMsg = el('div','msg bot'); loadingMsg.textContent = 'Loading…';
+  messagesEl.appendChild(loadingMsg); scrollToBottom();
+
+  try{
+    const resp = await apiGetChat(name);
+    messagesEl.innerHTML = '';
+    let convObj = null;
+    if(resp && typeof resp === 'object'){
+      if(resp.conversation && resp.conversation[name]) convObj = resp.conversation[name];
+      else if(resp[name]) convObj = resp[name];
+      else if(resp.conversation && resp.conversation.messages) convObj = resp.conversation;
+      else convObj = resp;
+    }
+    const msgs = (convObj && convObj.messages) ? convObj.messages : [];
+    for(const m of msgs){
+      const k = Object.keys(m || {})[0];
+      const txt = m[k] || '';
+      const isUser = !String(k).toLowerCase().includes('nova');
+      messagesEl.appendChild(renderMessageElement(txt, isUser ? 'user' : 'bot', k));
+    }
+    scrollToBottom();
+  }catch(e){
+    messagesEl.innerHTML = '';
+    const err = el('div','msg bot'); err.textContent = 'Failed to load conversation.';
+    messagesEl.appendChild(err);
+    console.error('openConversation', e);
+  }
+}
+
+/* RENAME logic: save button with duplicate check (case-insensitive) */
+renameSave.addEventListener('click', async ()=>{
+  const newName = (renameInput.value||'').trim();
+  if(!newName || !editingConv){ renameError.textContent='Please enter name'; renameError.style.display='block'; return; }
+  const exists = conversations.some(c => c.name && c.name.toLowerCase() === newName.toLowerCase() && c.name.toLowerCase() !== (editingConv||'').toLowerCase());
+  if(exists){ renameError.textContent='Name already exists'; renameError.style.display='block'; return; }
+  try{
+    await apiRename(editingConv, newName);
+    if(currentConv === editingConv) currentConv = newName;
+    renameModal.style.display='none'; editingConv=null;
+    showToast('Renamed ✅');
+    await loadList();
+  }catch(e){
+    renameError.textContent='Rename failed'; renameError.style.display='block';
+    console.error('rename error', e);
+  }
+});
+renameCancel.addEventListener('click', ()=>{ renameModal.style.display='none'; editingConv=null; });
+
+/* message send flow */
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } });
+
+async function sendMessage(){
+  const text = (messageInput.value||'').trim();
+  if(!text) return;
+  const username = USER_EMAIL.split('@')[0].split('.')[0] || 'S';
+
+  // optimistic user message
+  messagesEl.appendChild(renderMessageElement(text,'user', username));
+  scrollToBottom();
+  messageInput.value = '';
+  autoSizeTextarea();
+
+  // typing bubble
+  const typingNode = createTypingBubble();
+  messagesEl.appendChild(typingNode);
+  scrollToBottom();
+
+  // call n8n
+  let novaReply = null; let aiConvName = null;
+  try{
+    const n8nResp = await apiN8nChat(currentConv || "", text);
+    if(typeof n8nResp === 'string') novaReply = n8nResp;
+    else if(n8nResp && typeof n8nResp === 'object'){
+      novaReply = n8nResp.output?.reply || n8nResp.output?.text || n8nResp.output?.message || n8nResp.reply || n8nResp.message;
+      aiConvName = n8nResp.conversation_name || n8nResp.conversationName || n8nResp.conversation || n8nResp.meta?.conversation_name || n8nResp.output?.conversation_name;
+      for(const k of Object.keys(n8nResp)){ if(k.toLowerCase().includes('conversation') && typeof n8nResp[k] === 'string' && n8nResp[k].length < 120) aiConvName = aiConvName || n8nResp[k]; }
+      if(!novaReply){ try{ novaReply = JSON.stringify(n8nResp) }catch(e){ novaReply = String(n8nResp) } }
+    } else novaReply = String(n8nResp);
+  }catch(e){
+    console.error('n8n chat error', e);
+    novaReply = "Sorry — Nova couldn't generate a reply right now.";
+  }
+
+  try{ typingNode.remove(); }catch(e){}
+
+  // pick conversation name if new
+  if(!currentConv){
+    let chosen = (aiConvName && String(aiConvName).trim()) ? String(aiConvName).trim() : null;
+    if(!chosen){
+      const m = (novaReply||"").match(/conversation_name[:\s]*["']?([A-Za-z0-9 \-_,.!?]{3,100})["']?/i);
+      if(m && m[1]) chosen = m[1].trim();
+    }
+    if(!chosen){ const ts = new Date().toISOString().slice(0,19).replace(/[:.]/g,'-'); chosen = `Untitled ${ts}`; }
+    currentConv = chosen;
+  }
+
+  // persist user message
+  try{ await apiAppendMessage(currentConv, USER_EMAIL.split('@')[0].split('.')[0] || 'S', text); await loadList(); }catch(e){ console.warn('append user failed', e); showToast('Save failed'); }
+
+  // show nova reply
+  messagesEl.appendChild(renderMessageElement(novaReply || "sorry i can't process your request", 'bot', 'Nova'));
+  scrollToBottom();
+
+  // persist Nova reply
+  try{ await apiAppendMessage(currentConv, 'Nova', novaReply || ''); await loadList(); }catch(e){ console.warn('append nova failed', e); }
+}
+
+/* NEW CHAT from panel */
+panelNewChatBtn.addEventListener('click', ()=>{
+  currentConv = null;
+  messagesEl.innerHTML = '';
+  messagesEl.appendChild(renderMessageElement("👋 Nova  — New chat ready. Ask me anything!", 'bot', 'Nova'));
+  messageInput.value = ''; autoSizeTextarea();
+  closePanel();
+  loadList();
+});
+
+/* panel open/close */
+openPanelBtn.addEventListener('click', ()=>{ panelOverlay.style.display='block'; panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); loadList(); });
+closePanelBtn.addEventListener('click', ()=>{ closePanel(); });
+panelOverlay.addEventListener('click', ()=>{ closePanel(); });
+function closePanel(){ panel.classList.remove('open'); panelOverlay.style.display='none'; panel.setAttribute('aria-hidden','true'); }
+
+/* image modal */
+function openImageModal(src){
+  imageModalImg.src = src;
+  imageModal.style.display = 'flex';
+  imageDownloadBtn.onclick = ()=>{ const a = document.createElement('a'); a.href = src; a.download = ''; document.body.appendChild(a); a.click(); a.remove(); };
+}
+function closeImageModal(){ imageModalImg.src = ''; imageModal.style.display = 'none'; }
+imageCloseBtn.addEventListener('click', closeImageModal);
+imageModal.addEventListener('click', (e)=>{ if(e.target === imageModal) closeImageModal(); });
+
+/* search filter FIX */
+searchBox.addEventListener('input', (e)=>{
+  const q = (e.target.value||'').toLowerCase().trim();
+  if (q === '') {
+    renderConvList(conversations); // Show all if search is empty
+    return;
+  }
+  const filtered = conversations.filter(c => (c.name||'').toLowerCase().includes(q));
+  renderConvList(filtered); // Use the main render function with filtered list
+});
+
+/* autosize textarea up to 3 lines */
+function autoSizeTextarea(){ const ta = messageInput; ta.style.height='auto'; const computed = window.getComputedStyle(ta); const lineHeight = parseFloat(computed.lineHeight) || 18; const maxHeight = lineHeight*3 + 26; ta.style.height = Math.min(ta.scrollHeight, maxHeight) + 'px'; }
+messageInput.addEventListener('input', autoSizeTextarea);
+autoSizeTextarea();
+
+/* placeholder typewriter (in placeholder, not padding) */
+const placeholders = [
+  "Search today’s headlines…",
+  "Find breaking stories…",
+  "Type to discover news…",
+  "What’s happening now?",
+  "Explore trending news…",
+  "Enter keywords for news…",
+  "Search articles, topics, authors…",
+  "Looking for something in the news?",
+  "Type here to catch the buzz…",
+  "Start searching for news…"
+];
+let phIndex=0, phPos=0, phTimer=null;
+function startPlaceholderTyping(){
+  clearTimeout(phTimer);
+  const txt = placeholders[phIndex];
+  phPos=0;
+  function step(){
+    if(document.activeElement === messageInput || messageInput.value.trim()){ messageInput.placeholder=''; return; }
+    phPos++; messageInput.placeholder = txt.slice(0,phPos);
+    if(phPos < txt.length) phTimer = setTimeout(step, 35 + Math.random()*40);
+    else phTimer = setTimeout(()=>{ erase(); }, 900 + Math.random()*300);
+  }
+  function erase(){ if(document.activeElement === messageInput || messageInput.value.trim()){ messageInput.placeholder=''; return; } if(phPos>0){ phPos--; messageInput.placeholder = txt.slice(0,phPos); phTimer = setTimeout(erase,20 + Math.random()*30); } else { phIndex=(phIndex+1)%placeholders.length; phTimer=setTimeout(startPlaceholderTyping,300); } }
+  step();
+}
+messageInput.addEventListener('focus', ()=>{ clearTimeout(phTimer); messageInput.placeholder=''; });
+messageInput.addEventListener('blur', ()=>{ if(!messageInput.value.trim()) startPlaceholderTyping(); });
+startPlaceholderTyping();
+
+/* back button logic */
+backBtn.addEventListener('click', ()=>{ if(panel.classList.contains('open')){ closePanel(); return; } try{ if(window.history && window.history.length>1) window.history.back(); }catch(e){} });
+
+/* init */
+(async function init(){ await loadList(); })();
+</script>
+</body>
+</html>
