@@ -1,26 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Animated Login / Sign Up</title>
-<meta name="google-adsense-account" content="ca-pub-2341881915972162">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Animated Sign Up / Sign In — Supabase</title>
 <style>
+  /* ---------- Your original aesthetic, preserved ---------- */
   body {
     margin: 0;
     font-family: "Poppins", sans-serif;
     height: 100vh;
     background: linear-gradient(135deg, #6ec6ff, #ff914d);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
     transition: opacity 0.8s ease;
   }
-
-  .fade-out {
-    opacity: 0;
-  }
+  .fade-out { opacity: 0; }
 
   .auth-container {
     width: 360px;
@@ -28,24 +25,15 @@
     backdrop-filter: blur(10px);
     border-radius: 20px;
     box-shadow: 0 0 25px rgba(255,255,255,0.4);
-    padding: 30px;
+    padding: 26px;
     text-align: center;
     position: relative;
     overflow: hidden;
     animation: floatIn 1s ease;
   }
+  @keyframes floatIn { from {transform: translateY(50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
 
-  @keyframes floatIn {
-    from {transform: translateY(50px); opacity: 0;}
-    to {transform: translateY(0); opacity: 1;}
-  }
-
-  .auth-container h2 {
-    color: white;
-    margin-bottom: 20px;
-    text-shadow: 0 0 10px white;
-  }
-
+  .auth-container h2 { color: white; margin-bottom: 16px; text-shadow: 0 0 10px white; }
   input {
     width: 80%;
     padding: 12px;
@@ -56,9 +44,8 @@
     text-align: center;
     font-size: 16px;
     box-shadow: 0 0 5px rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.9);
   }
-
   button {
     width: 85%;
     padding: 12px;
@@ -71,169 +58,310 @@
     cursor: pointer;
     background: linear-gradient(90deg, #ff914d, #ffb84d);
     box-shadow: 0 0 15px rgba(255,255,255,0.5);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
+  }
+  button:hover { transform: scale(1.04); box-shadow: 0 0 25px white; }
+  .switch { margin-top: 14px; color: white; font-size: 14px; cursor: pointer; text-decoration: underline; }
+  .loading { border: 4px solid rgba(255,255,255,0.4); border-top: 4px solid white; border-radius:50%; width:25px; height:25px; margin:12px auto; animation: spin 1s linear infinite; display:none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .popup { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%) scale(0.7); background: linear-gradient(135deg,#007bff,#00c6ff); color: white; border-radius: 16px; padding:18px 22px; box-shadow: 0 0 30px rgba(0,150,255,0.6); text-align:center; opacity:0; pointer-events:none; transition: all 0.32s ease; }
+  .popup.show { opacity:1; pointer-events:auto; transform: translate(-50%,-50%) scale(1); }
+  .popup.error { background: linear-gradient(135deg,#ff5252,#ff1744); box-shadow: 0 0 30px rgba(255,0,0,0.5); }
+
+  .debug {
+    margin-top:14px;
+    text-align:left;
+    max-height:160px;
+    overflow:auto;
+    color: #fff;
+    background: rgba(0,0,0,0.12);
+    padding:8px;
+    border-radius:10px;
+    font-size:12px;
+    line-height:1.4;
+    white-space:pre-wrap;
   }
 
-  button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px white;
-  }
+  /* slide animations for toggling */
+  .slide-out { animation: slideOut 0.35s forwards; }
+  .slide-in { animation: slideIn 0.35s forwards; }
+  @keyframes slideOut { from {transform: translateX(0);} to {transform: translateX(-100%);} }
+  @keyframes slideIn { from {transform: translateX(100%);} to {transform: translateX(0);} }
 
-  .switch {
-    margin-top: 20px;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  .loading {
-    border: 4px solid rgba(255,255,255,0.4);
-    border-top: 4px solid white;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    margin: 15px auto;
-    animation: spin 1s linear infinite;
-    display: none;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* Vibrant Popup */
-  .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.6);
-    background: linear-gradient(135deg, #007bff, #00c6ff);
-    color: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 0 40px rgba(0,150,255,0.7);
-    text-align: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.4s ease;
-  }
-
-  .popup.show {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .popup h2 {
-    margin-bottom: 10px;
-  }
-
-  .popup.error {
-    background: linear-gradient(135deg, #ff5252, #ff1744);
-    box-shadow: 0 0 30px rgba(255,0,0,0.6);
-  }
-
-  /* Page slide */
-  .slide-out {
-    animation: slideOut 0.6s forwards;
-  }
-  .slide-in {
-    animation: slideIn 0.6s forwards;
-  }
-
-  @keyframes slideOut {
-    from {transform: translateX(0);}
-    to {transform: translateX(-100%);}
-  }
-  @keyframes slideIn {
-    from {transform: translateX(100%);}
-    to {transform: translateX(0);}
-  }
+  /* small link row */
+  .row-links { display:flex; justify-content:center; gap:10px; margin-top:8px; font-size:13px; color:rgba(255,255,255,0.9); }
+  .link-btn { background: rgba(255,255,255,0.08); padding:6px 10px; border-radius:8px; cursor:pointer; border:none; color:white; }
 </style>
 </head>
 <body>
+  <div class="auth-container" id="authBox">
+    <h2 id="formTitle">Sign Up</h2>
+    <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
+    <input id="password" type="password" placeholder="Enter password" autocomplete="current-password" />
+    <div class="loading" id="loading"></div>
+    <button id="authBtn">Sign Up</button>
+    <div class="switch" id="switchText">Already have an account? Sign In</div>
 
-<div class="auth-container" id="authBox">
-  <h2 id="formTitle">Sign Up</h2>
-  <input type="email" id="email" placeholder="Enter your email">
-  <input type="password" id="password" placeholder="Enter password">
-  <div class="loading" id="loading"></div>
-  <button id="authBtn" onclick="handleAuth()">Sign Up</button>
-  <div class="switch" id="switchText" onclick="toggleForm()">Already have an account? Sign In</div>
-</div>
+    <div class="row-links" style="margin-top:12px">
+      <button class="link-btn" id="resetBtn">Reset PW</button>
+      <button class="link-btn" id="showLogs">Show Full Logs</button>
+    </div>
 
-<div class="popup" id="popupBox">
-  <h2 id="popupTitle"></h2>
-  <p id="popupMsg"></p>
-</div>
-<script>
-  // Check if user already logged in
-  window.onload = () => {
-    const savedEmail = localStorage.getItem("userEmail");
-    if (savedEmail) {
-      window.location.href = `news.html?email=${encodeURIComponent(savedEmail)}`;
-    }
+    <div class="debug" id="debug">Logs will appear here (click "Show Full Logs" for full stack). Open DevTools Console for even more detail.</div>
+  </div>
+
+  <div class="popup" id="popup">
+    <h3 id="popupTitle">Title</h3>
+    <p id="popupMsg">Message</p>
+  </div>
+
+<script type="module">
+/* ==================== CONFIG ====================
+   Replace anon key only if you need to use a different one.
+   Keep the SUPABASE_URL exactly as your project URL.
+   ================================================= */
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const SUPABASE_URL = 'https://cmsyrrnekokiqeonfqdo.supabase.co';
+const SUPABASE_ANON_KEY = 'zp11FoNcl94M1LWa1vHmkvLcyV0DxaYvz6Gqn7oS4wJbZf8glBq3v0ritLfCs/cAxrFcZ8H4OQmCiwnu0TW/Xg==';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ==================== UI refs ==================== */
+const authBox = document.getElementById('authBox');
+const formTitle = document.getElementById('formTitle');
+const emailInput = document.getElementById('email');
+const passInput = document.getElementById('password');
+const loadingEl = document.getElementById('loading');
+const authBtn = document.getElementById('authBtn');
+const switchText = document.getElementById('switchText');
+const debugEl = document.getElementById('debug');
+const popup = document.getElementById('popup');
+const popupTitle = document.getElementById('popupTitle');
+const popupMsg = document.getElementById('popupMsg');
+const resetBtn = document.getElementById('resetBtn');
+const showLogs = document.getElementById('showLogs');
+
+let isSignUp = true;
+
+/* ==================== Utilities ==================== */
+function nowStr(){ return (new Date()).toLocaleTimeString(); }
+function appendLog(...args){
+  const txt = args.map(a => {
+    try{ return (typeof a === 'object') ? JSON.stringify(a, Object.getOwnPropertyNames(a), 2) : String(a);
+    } catch(e){ return String(a); }
+  }).join(' ');
+  debugEl.innerText = `${nowStr()} — ${txt}\n\n` + debugEl.innerText;
+  console.log(...args);
+}
+function showPopup(type, title, msg){
+  popup.className = 'popup' + (type === 'error' ? ' error' : '');
+  popupTitle.innerText = title;
+  popupMsg.innerText = msg;
+  popup.classList.add('show');
+  setTimeout(()=> popup.classList.remove('show'), 3000);
+}
+function setLoading(on){
+  loadingEl.style.display = on ? 'block' : 'none';
+  authBtn.disabled = on;
+  switchText.style.pointerEvents = on ? 'none' : 'auto';
+  resetBtn.disabled = on;
+  showLogs.disabled = on;
+}
+
+/* ==================== Profile upsert (client-side, defensive) ==================== */
+async function ensureProfile(user){
+  if (!user || !user.id) return;
+  const payload = {
+    auth_id: user.id,
+    email: user.email,
+    created_at: new Date().toISOString()
   };
 
-  let isSignUp = true;
+  appendLog('ensureProfile: upserting profile for', user.email);
 
-  function toggleForm() {
-    const box = document.getElementById("authBox");
-    box.classList.add("slide-out");
-    setTimeout(() => {
-      box.classList.remove("slide-out");
-      box.classList.add("slide-in");
-      document.getElementById("formTitle").innerText = isSignUp ? "Sign In" : "Sign Up";
-      document.getElementById("authBtn").innerText = isSignUp ? "Sign In" : "Sign Up";
-      document.getElementById("switchText").innerText = isSignUp ? "Don't have an account? Sign Up" : "Already have an account? Sign In";
-      isSignUp = !isSignUp;
-    }, 300);
+  try {
+    const res = await supabase.from('users').upsert(payload, { onConflict: 'auth_id' }).select();
+    appendLog('ensureProfile result', res);
+
+    if (res.error){
+      // show full error object in debug
+      appendLog('ensureProfile error object', res.error);
+      const msg = (res.error.message || '').toLowerCase();
+      if (msg.includes('permission') || msg.includes('rls')){
+        showPopup('error','DB blocked','RLS blocked client write. Add RLS policies or rely on server trigger.');
+      } else {
+        showPopup('error','Profile upsert failed', res.error.message || JSON.stringify(res.error));
+      }
+    } else {
+      appendLog('profile upsert ok', res.data);
+    }
+  } catch (e){
+    appendLog('ensureProfile crashed:', e);
   }
+}
 
-  function showPopup(type, title, msg) {
-    const popup = document.getElementById("popupBox");
-    popup.className = `popup ${type}`;
-    document.getElementById("popupTitle").innerText = title;
-    document.getElementById("popupMsg").innerText = msg;
-    popup.classList.add("show");
-    setTimeout(() => popup.classList.remove("show"), 2500);
-  }
+/* ==================== Sign Up / Sign In (full error logging) ==================== */
+async function attemptSignUp(email, password){
+  setLoading(true);
+  appendLog('Attempting signUp for', email);
+  try {
+    const result = await supabase.auth.signUp({ email, password });
+    // show full object
+    appendLog('signUp raw result', result);
+    if (result.error){
+      // Print full error object details
+      try {
+        appendLog('signUp error (full):', JSON.stringify(result.error, Object.getOwnPropertyNames(result.error), 2));
+      } catch(e) {
+        appendLog('signUp error (fallback):', result.error);
+      }
 
-  function handleAuth() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const loading = document.getElementById("loading");
-
-    if (!email || !password) {
-      showPopup("error", "Error", "Please fill all fields");
-      return;
+      // Friendly messages for known codes
+      if (result.error.code === 'user_already_exists' || result.error.status === 422){
+        showPopup('error','Account exists','That email is already registered. Try Sign In or Reset Password.');
+      } else if (result.error.code === 'unexpected_failure' || result.error.status === 500){
+        showPopup('error','Server error','Unexpected server error. Check Supabase Auth logs & DB triggers.');
+      } else {
+        showPopup('error','Sign Up failed', result.error.message || String(result.error));
+      }
+      return { ok:false, result };
     }
 
-    loading.style.display = "block";
+    // success path
+    if (result.data?.session){
+      appendLog('Signed up and got session', result.data.user);
+      showPopup('success','Welcome','Account created & signed in.');
+      await ensureProfile(result.data.user);
+      // short delay then redirect
+      setTimeout(()=> {
+        document.body.classList.add('fade-out');
+        setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700);
+      }, 900);
+    } else {
+      appendLog('SignUp returned no session (email confirmation likely enabled)', result);
+      showPopup('success','Confirm email','Check your inbox to confirm the account (if email confirmation enabled).');
+    }
+    return { ok:true, result };
+  } catch (e){
+    appendLog('signUp exception', e);
+    showPopup('error','Client error','Unexpected exception during sign up — see console.');
+    return { ok:false, result: e };
+  } finally { setLoading(false); }
+}
 
-    setTimeout(() => {
-      loading.style.display = "none";
-      if (isSignUp) {
-        localStorage.setItem("userEmail", email);
-        const name = email.split("@")[0];
-        showPopup("success", "Account Created!", `Welcome ${name}`);
+async function attemptSignIn(email, password){
+  setLoading(true);
+  appendLog('Attempting signIn for', email);
+  try {
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    appendLog('signIn raw result', result);
+    if (result.error){
+      try { appendLog('signIn error (full):', JSON.stringify(result.error, Object.getOwnPropertyNames(result.error), 2)); } catch(e) { appendLog('signIn error', result.error); }
+
+      if (result.error.code === 'invalid_credentials' || result.error.status === 400){
+        showPopup('error','Invalid','Invalid credentials. Try Reset Password.');
+      } else if (result.error.code === 'unexpected_failure' || result.error.status === 500){
+        showPopup('error','Server','Unexpected server error. Check Supabase Auth logs and DB triggers.');
       } else {
-        const storedEmail = localStorage.getItem("userEmail");
-        if (storedEmail === email) {
-          const name = email.split("@")[0];
-          showPopup("success", "Welcome Back", `Welcome ${name}`);
-          setTimeout(() => {
-            document.body.classList.add("fade-out");
-            setTimeout(() => {
-              window.location.href = `news.html?email=${encodeURIComponent(email)}`;
-            }, 800);
-          }, 1500);
-        } else {
-          showPopup("error", "Error", "Account not found! Please sign up first.");
-        }
+        showPopup('error','Sign In failed', result.error.message || String(result.error));
       }
-    }, 1500);
+      return { ok:false, result };
+    }
+
+    // success
+    if (result.data?.user){
+      appendLog('Signed in user', result.data.user);
+      showPopup('success','Welcome back','Signed in successfully.');
+      await ensureProfile(result.data.user);
+      setTimeout(()=> {
+        document.body.classList.add('fade-out');
+        setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700);
+      }, 700);
+      return { ok:true, result };
+    } else {
+      appendLog('signIn returned no user/session', result);
+      showPopup('error','Sign in', 'Sign in did not return a session. Check Auth settings.');
+      return { ok:false, result };
+    }
+  } catch (e){
+    appendLog('signIn exception', e);
+    showPopup('error','Client error','Unexpected exception during sign in — see console.');
+    return { ok:false, result:e };
+  } finally { setLoading(false); }
+}
+
+/* ==================== Handlers & UI wiring ==================== */
+async function handleAuth(){
+  const email = emailInput.value.trim();
+  const pass = passInput.value.trim();
+  if (!email || !pass){ showPopup('error','Missing fields','Please fill email and password'); return; }
+
+  if (isSignUp){
+    await attemptSignUp(email, pass);
+  } else {
+    await attemptSignIn(email, pass);
   }
+}
+
+authBtn.addEventListener('click', handleAuth);
+switchText.addEventListener('click', () => {
+  // animation
+  authBox.classList.add('slide-out');
+  setTimeout(() => {
+    authBox.classList.remove('slide-out');
+    authBox.classList.add('slide-in');
+    isSignUp = !isSignUp;
+    formTitle.innerText = isSignUp ? 'Sign Up' : 'Sign In';
+    authBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
+    switchText.innerText = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
+    setTimeout(()=> authBox.classList.remove('slide-in'), 360);
+  }, 260);
+});
+
+/* reset password */
+resetBtn.addEventListener('click', async () => {
+  const email = emailInput.value.trim();
+  if (!email){ showPopup('error','No email','Enter your email to reset password'); return; }
+  setLoading(true);
+  try {
+    const res = await supabase.auth.resetPasswordForEmail(email);
+    appendLog('resetPasswordForEmail', res);
+    if (res.error) { appendLog('reset error full', res.error); showPopup('error','Reset failed', res.error.message || String(res.error)); }
+    else { showPopup('success','Reset requested','If account exists a reset email was sent.'); }
+  } catch(e){ appendLog('reset exception', e); showPopup('error','Reset', 'Unexpected error - see console.'); }
+  finally { setLoading(false); }
+});
+
+/* show full logs button: copy debug contents to console */
+showLogs.addEventListener('click', () => {
+  console.log('Full page debug log:\n', debugEl.innerText);
+  alert('Full logs printed to console. Open DevTools Console for full detail.');
+});
+
+/* submit on Enter in password field */
+passInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAuth(); });
+
+/* ==================== Init: session check + auth listener ==================== */
+(async function init(){
+  try {
+    const { data } = await supabase.auth.getSession();
+    appendLog('INITIAL_SESSION', data?.session ?? null);
+
+    // If session exists, try to ensure profile (best-effort)
+    if (data?.session?.user) {
+      appendLog('session user present', data.session.user);
+      await ensureProfile(data.session.user);
+    }
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      appendLog('Auth event', event, session ?? null);
+    });
+  } catch (e){
+    appendLog('init crashed', e);
+  }
+})();
 </script>
 </body>
 </html>
