@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Login / Sign Up</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    background: linear-gradient(135deg, #6ec6ff, #ff914d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .auth-container {
+    width: 360px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.4);
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: floatIn 1s ease;
+  }
+
+  @keyframes floatIn {
+    from {transform: translateY(50px); opacity: 0;}
+    to {transform: translateY(0); opacity: 1;}
+  }
+
+  .auth-container h2 {
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px white;
+  }
+
+  input {
+    width: 80%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 25px;
+    outline: none;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 0 5px rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.8);
+  }
+
+  button {
+    width: 85%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 25px;
+    font-size: 17px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    background: linear-gradient(90deg, #ff914d, #ffb84d);
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px white;
+  }
+
+  .switch {
+    margin-top: 20px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .loading {
+    border: 4px solid rgba(255,255,255,0.4);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    margin: 15px auto;
+    animation: spin 1s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Popup */
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.6);
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 0 30px rgba(255,255,255,0.8);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  .popup.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .popup h2 {
+    margin-bottom: 10px;
+    color: #2196f3;
+  }
+
+  .popup.error h2 {
+    color: red;
+  }
+
+  .popup p {
+    font-size: 15px;
+    color: #333;
+  }
+
+  /* Page transition */
+  .slide-out {
+    animation: slideOut 0.6s forwards;
+  }
+  .slide-in {
+    animation: slideIn 0.6s forwards;
+  }
+
+  @keyframes slideOut {
+    from {transform: translateX(0);}
+    to {transform: translateX(-100%);}
+  }
+  @keyframes slideIn {
+    from {transform: translateX(100%);}
+    to {transform: translateX(0);}
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-container" id="authBox">
+  <h2 id="formTitle">Sign Up</h2>
+  <input type="email" id="email" placeholder="Enter your email">
+  <input type="password" id="password" placeholder="Enter password">
+  <div class="loading" id="loading"></div>
+  <button id="authBtn" onclick="handleAuth()">Sign Up</button>
+  <div class="switch" id="switchText" onclick="toggleForm()">Already have an account? Sign In</div>
+</div>
+
+<div class="popup" id="popupBox">
+  <h2 id="popupTitle"></h2>
+  <p id="popupMsg"></p>
+</div>
+
+<script>
+  let isSignUp = true;
+
+  function toggleForm() {
+    const box = document.getElementById("authBox");
+    box.classList.add("slide-out");
+    setTimeout(() => {
+      box.classList.remove("slide-out");
+      box.classList.add("slide-in");
+      document.getElementById("formTitle").innerText = isSignUp ? "Sign In" : "Sign Up";
+      document.getElementById("authBtn").innerText = isSignUp ? "Sign In" : "Sign Up";
+      document.getElementById("switchText").innerText = isSignUp ? "Don't have an account? Sign Up" : "Already have an account? Sign In";
+      isSignUp = !isSignUp;
+    }, 300);
+  }
+
+  function showPopup(type, title, msg) {
+    const popup = document.getElementById("popupBox");
+    popup.className = `popup ${type}`;
+    document.getElementById("popupTitle").innerText = title;
+    document.getElementById("popupMsg").innerText = msg;
+    popup.classList.add("show");
+    setTimeout(() => popup.classList.remove("show"), 3000);
+  }
+
+  function handleAuth() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const loading = document.getElementById("loading");
+
+    if (!email || !password) {
+      showPopup("error", "Error", "Please fill all fields");
+      return;
+    }
+
+    loading.style.display = "block";
+
+    setTimeout(() => {
+      loading.style.display = "none";
+      if (isSignUp) {
+        localStorage.setItem("userEmail", email);
+        const name = email.split("@")[0];
+        showPopup("success", "Account Created!", `Welcome ${name}`);
+      } else {
+        const storedEmail = localStorage.getItem("userEmail");
+        if (storedEmail === email) {
+          const name = email.split("@")[0];
+          showPopup("success", "Welcome Back", `Welcome ${name}`);
+          setTimeout(() => {
+            window.location.href = `news.html?email=${encodeURIComponent(email)}`;
+          }, 1500);
+        } else {
+          showPopup("error", "Error", "Account not found! Please sign up first.");
+        }
+      }
+    }, 1500);
+  }
+</script>
+</body>
+</html>
