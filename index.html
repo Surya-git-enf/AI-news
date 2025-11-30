@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Animated Sign Up / Sign In — Supabase (email check)</title>
+<title>Animated Sign Up / Sign In — Supabase (restored)</title>
 <style>
   body{margin:0;font-family:"Poppins",sans-serif;height:100vh;background:linear-gradient(135deg,#6ec6ff,#ff914d);display:flex;justify-content:center;align-items:center;overflow:hidden;transition:opacity .8s ease}
   .fade-out{opacity:0}
-  .auth-container{width:360px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 0 25px rgba(255,255,255,.4);padding:30px;text-align:center;position:relative;overflow:hidden;animation:floatIn 1s ease}
-  @keyframes floatIn{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
+  /* keep original glass card look */
+  .auth-container{width:250px;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 0 25px rgba(255,255,255,.7);padding:30px;text-align:center;position:relative;overflow:hidden;animation:fadeIn 420ms ease}
+  @keyframes fadeIn{from{opacity:0;transform:scale(.995)}to{opacity:1;transform:scale(1)}}
+
   .auth-container h2{color:white;margin-bottom:20px;text-shadow:0 0 10px white}
   input{width:80%;padding:12px;margin:8px 0;border:none;border-radius:25px;outline:none;text-align:center;font-size:16px;box-shadow:0 0 5px rgba(255,255,255,.6);background:rgba(255,255,255,.9)}
   button{width:85%;padding:12px;margin-top:10px;border:none;border-radius:25px;font-size:17px;font-weight:700;color:white;cursor:pointer;background:linear-gradient(90deg,#ff914d,#ffb84d);box-shadow:0 0 15px rgba(255,255,255,.5);transition:all .25s}
@@ -16,66 +18,83 @@
   .switch{margin-top:18px;color:white;font-size:14px;cursor:pointer}
   .loading{border:4px solid rgba(255,255,255,.4);border-top:4px solid white;border-radius:50%;width:25px;height:25px;margin:12px auto;animation:spin 1s linear infinite;display:none}
   @keyframes spin{to{transform:rotate(360deg)}}
+
   .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:linear-gradient(135deg,#007bff,#00c6ff);color:white;border-radius:16px;padding:18px 22px;box-shadow:0 0 30px rgba(0,150,255,.6);text-align:center;opacity:0;pointer-events:none;transition:all .28s}
   .popup.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
   .popup.error{background:linear-gradient(135deg,#ff5252,#ff1744)}
-  .debug{margin-top:12px;background:rgba(0,0,0,.08);padding:10px;border-radius:8px;font-size:13px;max-height:120px;overflow:auto;color:#fff;text-align:left}
-  .slide-out{animation:slideOut .35s forwards}
-  .slide-in{animation:slideIn .35s forwards}
-  @keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+  /* transition: outgoing = slide left + fade + zoom-out */
+  .slide-out{animation:slideOut .36s forwards}
+  @keyframes slideOut{from{transform:translateX(0) scale(1);opacity:1}to{transform:translateX(-28%) scale(.92);opacity:0}}
+
+  /* incoming = slide from right + fade + zoom-in */
+  .slide-in{animation:slideIn .42s forwards}
+  @keyframes slideIn{from{transform:translateX(30%) scale(.96);opacity:0}60%{transform:translateX(-4%) scale(1.02);opacity:1}to{transform:translateX(0) scale(1);opacity:1}}
+
+  @media (max-width:420px){ .auth-container{width:92vw;padding:22px} input{width:90%} button{width:90%} }
 </style>
 </head>
 <body>
   <div class="auth-container" id="authBox" aria-live="polite">
     <h2 id="formTitle">Sign Up</h2>
-    <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
-    <input id="password" type="password" placeholder="Enter password (min 6 chars)" autocomplete="current-password" />
-    <div class="loading" id="loading" aria-hidden="true"></div>
-    <button id="authBtn">Sign Up</button>
-    <div class="switch" id="switchText">Already have an account? Sign In</div>
-    <div class="debug" id="debug">Debug logs will appear here.</div>
+    <div id="formContent">
+      <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
+      <input id="password" type="password" placeholder="Enter password (min 6 chars)" autocomplete="current-password" />
+      <div class="loading" id="loading" aria-hidden="true"></div>
+      <button id="authBtn">Sign Up</button>
+      <div class="switch" id="switchText">Already have an account? Sign In</div>
+    </div>
   </div>
 
   <div class="popup" id="popup"><h3 id="popupTitle"></h3><p id="popupMsg"></p></div>
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  
+  
+  // init: immediate redirect if localStorage.userEmail exists
+  (function init(){
+    try {
+      const saved = localStorage.getItem('userEmail');
+      dbg('init saved email:', saved);
+      if (saved && typeof saved === 'string' && saved.trim() !== '') {
+        document.body.classList.add('fade-out');
+        setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(saved.trim())}`, 240);
+        return;
+      }
+    } catch(e){ dbg('init exception', e); }
+  })();
 
   // ========== CONFIG: REPLACE THESE ==========
   const SUPABASE_URL = 'https://cmsyrrnekokiqeonfqdo.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29raXFlb25mcWRvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE3MDgyOCwiZXhwIjoyMDczNzQ2ODI4fQ.0bOFoi7JXEtRlHNU-Am60_4peN6IkV_A3kRa7ibAr8w';
   // ===========================================
 
-  // quick safety check
-  const debugEl = document.getElementById('debug');
-  if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR-PROJECT') || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR-ANON-KEY')) {
-    debugEl.innerText = 'ERROR: Replace SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file before testing.';
+  // silent safety check
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('YOUR-PROJECT') || SUPABASE_ANON_KEY.includes('YOUR-ANON-KEY')) {
+    console.error('Replace SUPABASE_URL and SUPABASE_ANON_KEY in this file before testing.');
     throw new Error('Missing Supabase config');
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 
-  // UI elements
+  // ui refs
+  const authBox = document.getElementById('authBox');
+  const formContent = document.getElementById('formContent');
+  const formTitle = document.getElementById('formTitle');
   const emailEl = document.getElementById('email');
-  const passEl = document.getElementById('password');
-  const authBtn = document.getElementById('authBtn');
+  const passEl  = document.getElementById('password');
+  const authBtn  = document.getElementById('authBtn');
   const switchText = document.getElementById('switchText');
   const loadingEl = document.getElementById('loading');
   const popup = document.getElementById('popup');
   const popupTitle = document.getElementById('popupTitle');
   const popupMsg = document.getElementById('popupMsg');
-  const formTitle = document.getElementById('formTitle');
 
   let isSignUp = true;
 
-  function now(){ return (new Date()).toLocaleTimeString(); }
-  function appendDebug(...args){
-    const txt = args.map(a => {
-      try{ return typeof a === 'object' ? JSON.stringify(a, Object.getOwnPropertyNames(a), 2) : String(a); } catch(e){ return String(a); }
-    }).join(' ');
-    debugEl.innerText = `${now()} — ${txt}\n\n` + debugEl.innerText;
-    console.log(...args);
-  }
+  // console-only debug (no on-page logs)
+  function dbg(...args){ console.log(...args); }
 
   function setLoading(on){
     loadingEl.style.display = on ? 'block' : 'none';
@@ -83,7 +102,7 @@
     switchText.style.pointerEvents = on ? 'none' : 'auto';
   }
 
-  function showPopup(type, title, msg){
+  function showPopup(type='info', title='', msg=''){
     popup.className = 'popup' + (type === 'error' ? ' error' : '');
     popupTitle.innerText = title;
     popupMsg.innerText = msg;
@@ -91,29 +110,25 @@
     setTimeout(()=> popup.classList.remove('show'), 2800);
   }
 
-  // ==== Core DB helpers ====
+  // DB helpers
   async function emailExists(email){
     try {
-      appendDebug('Checking email exists:', email);
-      // maybeSingle() returns null if not found (no exception) — v2 client
-      const { data, error } = await supabase
-        .from('users')
-        .select('id,email')
-        .eq('email', email)
-        .maybeSingle();
-
+      dbg('checking existence for', email);
+      const { data, error } = await supabase.from('users').select('id,email').eq('email', email).maybeSingle();
       if (error) {
-        appendDebug('emailExists error', error);
-        // permission / RLS errors often show up here
-        if ((error.message||'').toLowerCase().includes('permission') || (error.message||'').toLowerCase().includes('rls') || (error.message||'').toLowerCase().includes('forbidden')) {
+        dbg('emailExists error', error);
+        const m = (error.message||'').toLowerCase();
+        if (m.includes('permission') || m.includes('rls') || m.includes('forbidden')) {
           showPopup('error','DB blocked','Client read blocked by RLS — check table policies or use server-side function.');
+        } else {
+          showPopup('error','DB error', error.message || JSON.stringify(error));
         }
-        return null; // unknown due to error
+        return null;
       }
-      appendDebug('emailExists result', data);
+      dbg('emailExists result', data);
       return !!data;
     } catch (e) {
-      appendDebug('emailExists exception', e);
+      dbg('emailExists exception', e);
       showPopup('error','Error','Unexpected error checking email (see console).');
       return null;
     }
@@ -121,170 +136,83 @@
 
   async function createUserRow(email){
     try {
-      appendDebug('Creating user row for', email);
-      const payload = { email, created_at: new Date().toISOString() };
-      const { data, error } = await supabase
-        .from('users')
-        .insert(payload, { returning: 'representation' })
-        .select()
-        .maybeSingle ? await supabase.from('users').insert(payload).select().maybeSingle() : await supabase.from('users').insert(payload).select().single();
-
-      // Note: above attempt uses maybeSingle if available; some clients require .select().single()
-      // We will use the returned variables below, but to be safe, re-run simple insert and check error above.
-    } catch (e) {
-      // fallback single insert with explicit error handling
-      appendDebug('createUserRow fallback', e);
-      try {
-        const payload = { email, created_at: new Date().toISOString() };
-        const resp = await supabase.from('users').insert(payload).select().single();
-        appendDebug('createUserRow result', resp);
-        if (resp.error) {
-          appendDebug('insert error', resp.error);
-          if ((resp.error.message||'').toLowerCase().includes('permission') || (resp.error.message||'').toLowerCase().includes('rls')) {
-            showPopup('error','DB blocked','Client write blocked by RLS — check table policies or use server-side function.');
-            return { success: false, error: resp.error };
-          }
-          showPopup('error','Insert failed', resp.error.message || JSON.stringify(resp.error));
-          return { success: false, error: resp.error };
-        }
-        return { success: true, data: resp.data };
-      } catch (ex) {
-        appendDebug('createUserRow final exception', ex);
-        showPopup('error','Error','Unexpected error creating row (see console).');
-        return { success: false, error: ex };
-      }
-    }
-
-    // If we reached here it means the earlier branch didn't return (rare); attempt simpler insert:
-    try {
-      const { data, error } = await supabase.from('users').insert({ email, created_at: new Date().toISOString() }).select().maybeSingle();
-      appendDebug('createUserRow simple result', { data, error });
+      dbg('creating user row for', email);
+      const { data, error } = await supabase.from('users').insert({ email, created_at: new Date().toISOString() }).select().single();
       if (error) {
-        if ((error.message||'').toLowerCase().includes('permission') || (error.message||'').toLowerCase().includes('rls')) {
+        dbg('createUserRow error', error);
+        const m = (error.message||'').toLowerCase();
+        if (m.includes('permission') || m.includes('rls')) {
           showPopup('error','DB blocked','Client write blocked by RLS — check table policies or use server-side function.');
+        } else if (m.includes('duplicate') || (error.code === '23505')) {
+          return { success:false, alreadyExists:true, error };
         } else {
           showPopup('error','Insert failed', error.message || JSON.stringify(error));
         }
-        return { success: false, error };
+        return { success:false, error };
       }
-      return { success: true, data };
+      dbg('createUserRow result', data);
+      return { success:true, data };
     } catch (e) {
-      appendDebug('createUserRow catch', e);
-      showPopup('error','Error','Unexpected error creating row.');
-      return { success: false, error: e };
+      dbg('createUserRow exception', e);
+      showPopup('error','Error','Unexpected error creating row (see console).');
+      return { success:false, error:e };
     }
   }
 
-  // ==== UI handlers ====
+  // main handler
   authBtn.addEventListener('click', async () => {
-    const email = emailEl.value.trim().toLowerCase();
-    const password = passEl.value.trim();
+    const email = (emailEl.value||'').trim().toLowerCase();
+    const password = (passEl.value||'').trim();
 
     if (!email || !password) { showPopup('error','Missing fields','Please enter email and password'); return; }
     setLoading(true);
 
     if (isSignUp) {
-      // Sign Up flow: check users table by email first
       const exists = await emailExists(email);
-      if (exists === null) {
-        // error already shown by helper
-        setLoading(false);
-        return;
-      }
-      if (exists) {
-        setLoading(false);
-        showPopup('error','Account exists','This email is already registered. Switch to Sign In to continue.');
-        return;
-      }
+      if (exists === null) { setLoading(false); return; }
+      if (exists) { setLoading(false); showPopup('error','Account exists','This email is already registered. Switch to Sign In to continue.'); return; }
 
-      // Not found -> create row
       const created = await createUserRow(email);
       setLoading(false);
       if (created.success) {
-        // Save email locally and show success
         localStorage.setItem('userEmail', email);
-        const name = email.split('@')[0];
-        showPopup('success','Account created', `Welcome ${name}!`);
-        // optional redirect after a short delay
-        setTimeout(()=> {
-          document.body.classList.add('fade-out');
-          setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700);
-        }, 900);
+        showPopup('success','Account created', `Welcome ${email.split('@')[0]}!`);
+        setTimeout(()=> { document.body.classList.add('fade-out'); setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700); }, 900);
       } else {
-        // createUserRow will show popup in most error cases; ensure debug logged
-        appendDebug('createUserRow failed', created.error);
+        dbg('createUserRow failed', created.error);
+        if (created.alreadyExists) showPopup('error','Already exists','Account created recently — try Sign In.');
       }
-
     } else {
-      // Sign In flow: check users table
       const exists = await emailExists(email);
       setLoading(false);
       if (exists === null) return;
-      if (!exists) {
-        showPopup('error','Not found','Account not found — please sign up first.');
-        return;
-      }
-      // exists -> treat as signed-in (this UI is separate from Supabase Auth)
+      if (!exists) { showPopup('error','Not found','Account not found — please sign up first.'); return; }
       localStorage.setItem('userEmail', email);
       showPopup('success','Welcome back','Signing you in…');
-      setTimeout(()=> {
-        document.body.classList.add('fade-out');
-        setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700);
-      }, 900);
+      setTimeout(()=> { document.body.classList.add('fade-out'); setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700); }, 900);
     }
   });
 
-  // toggle form
+  // toggle: out-left (fade+zoom-out) then in-right (fade+zoom-in)
   switchText.addEventListener('click', () => {
-    const box = document.getElementById('authBox');
-    box.classList.add('slide-out');
+    formContent.classList.add('slide-out');
     setTimeout(()=> {
-      box.classList.remove('slide-out');
-      box.classList.add('slide-in');
-      // flip texts and mode
+      formContent.classList.remove('slide-out');
+      // flip state and UI
       isSignUp = !isSignUp;
       formTitle.innerText = isSignUp ? 'Sign Up' : 'Sign In';
       authBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
       switchText.innerText = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
-      setTimeout(()=> box.classList.remove('slide-in'), 360);
+      passEl.value = '';
+
+      // animate incoming
+      formContent.classList.add('slide-in');
+      setTimeout(()=> formContent.classList.remove('slide-in'), 460);
     }, 260);
   });
 
-  // double-click on switch to send reset (convenience) — optional
-  switchText.addEventListener('dblclick', async () => {
-    const email = prompt('Enter email to send reset link to:');
-    if (!email) return;
-    setLoading(true);
-    try {
-      const res = await supabase.auth.resetPasswordForEmail(email);
-      appendDebug('reset result', res);
-      if (res.error) showPopup('error','Reset failed', res.error.message || JSON.stringify(res.error));
-      else showPopup('success','Reset requested','If account exists, reset email sent.');
-    } catch (e) {
-      appendDebug('reset exception', e);
-      showPopup('error','Error','Unexpected error sending reset.');
-    } finally { setLoading(false); }
-  });
-
-  // keyboard Enter triggers action from password field
   passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') authBtn.click(); });
 
-  // auto-redirect if email saved already (IMMEDIATE redirect as requested)
-  (function init(){
-    try {
-      const saved = localStorage.getItem('userEmail');
-      appendDebug('init local saved email', saved);
-      if (saved && typeof saved === 'string' && saved.trim() !== '') {
-        // subtle UX: fade out then redirect immediately
-        document.body.classList.add('fade-out');
-        setTimeout(()=> {
-          // ensure it's encoded properly
-          window.location.href = `news.html?email=${encodeURIComponent(saved.trim())}`;
-        }, 240);
-        return; // stop further init
-      }
-    } catch(e){ appendDebug('init exception', e); }
-  })();
 
 </script>
 </body>
