@@ -41,7 +41,7 @@
       <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
       <input id="password" type="password" placeholder="Enter password (min 6 chars)" autocomplete="current-password" />
       <div class="loading" id="loading" aria-hidden="true"></div>
-      <button id="authBtn">Sign Up</button>
+      <button id="authBtn" type="button">Sign Up</button>
       <div class="switch" id="switchText">Already have an account? Sign In</div>
     </div>
   </div>
@@ -49,37 +49,22 @@
   <div class="popup" id="popup"><h3 id="popupTitle"></h3><p id="popupMsg"></p></div>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-  
-  
-  // init: immediate redirect if localStorage.userEmail exists
-  (function init(){
-    try {
-      const saved = localStorage.getItem('userEmail');
-      dbg('init saved email:', saved);
-      if (saved && typeof saved === 'string' && saved.trim() !== '') {
-        document.body.classList.add('fade-out');
-        setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(saved.trim())}`, 240);
-        return;
-      }
-    } catch(e){ dbg('init exception', e); }
-  })();
+/*
+  Resilient auth UI:
+  - Tries dynamic import of Supabase when DB actions are needed.
+  - If import or network fails, uses a localStorage-based fallback "users" store so UI works offline.
+  - Ensures event listeners are attached after DOM content loaded.
+*/
 
-  // ========== CONFIG: REPLACE THESE ==========
-  const SUPABASE_URL = 'https://cmsyrrnekokiqeonfqdo.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29raXFlb25mcWRvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE3MDgyOCwiZXhwIjoyMDczNzQ2ODI4fQ.0bOFoi7JXEtRlHNU-Am60_4peN6IkV_A3kRa7ibAr8w';
-  // ===========================================
+const SUPABASE_URL = 'https://cmsyrrnekokiqeonfqdo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29ra29raW...'; // keep but can be blank for testing
 
-  // silent safety check
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('YOUR-PROJECT') || SUPABASE_ANON_KEY.includes('YOUR-ANON-KEY')) {
-    console.error('Replace SUPABASE_URL and SUPABASE_ANON_KEY in this file before testing.');
-    throw new Error('Missing Supabase config');
-  }
+console.log('[auth] module loaded');
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+function dbg(...args){ console.log('[auth]', ...args); }
 
-  // ui refs
-  const authBox = document.getElementById('authBox');
+document.addEventListener('DOMContentLoaded', () => {
+  // UI refs
   const formContent = document.getElementById('formContent');
   const formTitle = document.getElementById('formTitle');
   const emailEl = document.getElementById('email');
@@ -92,10 +77,21 @@
   const popupMsg = document.getElementById('popupMsg');
 
   let isSignUp = true;
+  let supabaseClient = null;
+  let triedSupabase = false;
 
-  // console-only debug (no on-page logs)
-  function dbg(...args){ console.log(...args); }
+  // --- Redirect early if userEmail present
+  try {
+    const saved = localStorage.getItem('userEmail');
+    dbg('init saved email:', saved);
+    if (saved && saved.trim() !== '') {
+      document.body.classList.add('fade-out');
+      setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(saved.trim())}`, 820);
+      return; // stop further UI init
+    }
+  } catch(e){ dbg('init exception', e); }
 
+  // --- helpers: UI
   function setLoading(on){
     loadingEl.style.display = on ? 'block' : 'none';
     authBtn.disabled = on;
@@ -110,56 +106,99 @@
     setTimeout(()=> popup.classList.remove('show'), 2800);
   }
 
-  // DB helpers
-  async function emailExists(email){
+  // --- Fallback local "DB" using localStorage
+  function _getMockUsers(){
     try {
-      dbg('checking existence for', email);
-      const { data, error } = await supabase.from('users').select('id,email').eq('email', email).maybeSingle();
-      if (error) {
-        dbg('emailExists error', error);
-        const m = (error.message||'').toLowerCase();
-        if (m.includes('permission') || m.includes('rls') || m.includes('forbidden')) {
-          showPopup('error','DB blocked','Client read blocked by RLS — check table policies or use server-side function.');
-        } else {
-          showPopup('error','DB error', error.message || JSON.stringify(error));
-        }
-        return null;
-      }
-      dbg('emailExists result', data);
-      return !!data;
+      const raw = localStorage.getItem('mock_users');
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function _saveMockUsers(list){
+    try { localStorage.setItem('mock_users', JSON.stringify(list)); } catch(e){}
+  }
+  async function mockEmailExists(email){
+    const list = _getMockUsers();
+    return list.some(u => u.email === email);
+  }
+  async function mockCreateUser(email){
+    const list = _getMockUsers();
+    if (list.some(u => u.email === email)) return { success:false, alreadyExists:true };
+    const row = { id: Date.now(), email, created_at: new Date().toISOString() };
+    list.push(row);
+    _saveMockUsers(list);
+    return { success:true, data: row };
+  }
+
+  // --- attempt dynamic import of supabase (only when first DB op needed)
+  async function ensureSupabase(){
+    if (triedSupabase) return supabaseClient;
+    triedSupabase = true;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('YOUR-PROJECT') || SUPABASE_ANON_KEY.includes('YOUR-ANON-KEY')) {
+      dbg('Supabase config missing or placeholder — skipping remote DB init');
+      return null;
+    }
+    try {
+      dbg('attempting dynamic import of @supabase/supabase-js');
+      const module = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+      supabaseClient = module.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+      dbg('supabase client created');
+      return supabaseClient;
     } catch (e) {
-      dbg('emailExists exception', e);
-      showPopup('error','Error','Unexpected error checking email (see console).');
+      dbg('dynamic import failed or network blocked', e);
       return null;
     }
   }
 
-  async function createUserRow(email){
-    try {
-      dbg('creating user row for', email);
-      const { data, error } = await supabase.from('users').insert({ email, created_at: new Date().toISOString() }).select().single();
-      if (error) {
-        dbg('createUserRow error', error);
-        const m = (error.message||'').toLowerCase();
-        if (m.includes('permission') || m.includes('rls')) {
-          showPopup('error','DB blocked','Client write blocked by RLS — check table policies or use server-side function.');
-        } else if (m.includes('duplicate') || (error.code === '23505')) {
-          return { success:false, alreadyExists:true, error };
-        } else {
-          showPopup('error','Insert failed', error.message || JSON.stringify(error));
+  // --- DB helpers (use supabase if available, otherwise fallback)
+  async function emailExists(email){
+    const client = await ensureSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('users').select('id,email').eq('email', email).maybeSingle();
+        if (error) {
+          dbg('supabase emailExists error', error);
+          return null; // treat as indeterminate to show popup
         }
-        return { success:false, error };
+        return !!data;
+      } catch (e){
+        dbg('supabase emailExists exception', e);
+        return null;
       }
-      dbg('createUserRow result', data);
-      return { success:true, data };
-    } catch (e) {
-      dbg('createUserRow exception', e);
-      showPopup('error','Error','Unexpected error creating row (see console).');
-      return { success:false, error:e };
+    } else {
+      // fallback
+      return await mockEmailExists(email);
     }
   }
 
-  // main handler
+  async function createUserRow(email){
+    const client = await ensureSupabase();
+    if (client) {
+      try {
+        const { data, error } = await client.from('users').insert({ email, created_at: new Date().toISOString() }).select().single();
+        if (error) {
+          dbg('supabase createUserRow error', error);
+          // map some common errors
+          const m = (error.message||'').toLowerCase();
+          if (m.includes('permission') || m.includes('rls')) {
+            return { success:false, blocked:true, error };
+          }
+          if (m.includes('duplicate') || (error.code === '23505')) {
+            return { success:false, alreadyExists:true, error };
+          }
+          return { success:false, error };
+        }
+        return { success:true, data };
+      } catch (e){
+        dbg('supabase createUserRow exception', e);
+        return { success:false, error:e };
+      }
+    } else {
+      // fallback
+      return await mockCreateUser(email);
+    }
+  }
+
+  // --- Main click handler (same logic)
   authBtn.addEventListener('click', async () => {
     const email = (emailEl.value||'').trim().toLowerCase();
     const password = (passEl.value||'').trim();
@@ -169,7 +208,7 @@
 
     if (isSignUp) {
       const exists = await emailExists(email);
-      if (exists === null) { setLoading(false); return; }
+      if (exists === null) { setLoading(false); showPopup('error','DB error','Could not verify email — check console.'); return; }
       if (exists) { setLoading(false); showPopup('error','Account exists','This email is already registered. Switch to Sign In to continue.'); return; }
 
       const created = await createUserRow(email);
@@ -179,13 +218,15 @@
         showPopup('success','Account created', `Welcome ${email.split('@')[0]}!`);
         setTimeout(()=> { document.body.classList.add('fade-out'); setTimeout(()=> window.location.href = `news.html?email=${encodeURIComponent(email)}`, 700); }, 900);
       } else {
-        dbg('createUserRow failed', created.error);
+        dbg('createUserRow failed', created);
         if (created.alreadyExists) showPopup('error','Already exists','Account created recently — try Sign In.');
+        else if (created.blocked) showPopup('error','DB blocked','Client write blocked (check policies).');
+        else showPopup('error','Insert failed','Could not create account (see console).');
       }
     } else {
       const exists = await emailExists(email);
       setLoading(false);
-      if (exists === null) return;
+      if (exists === null) { showPopup('error','DB error','Could not verify email — check console.'); return; }
       if (!exists) { showPopup('error','Not found','Account not found — please sign up first.'); return; }
       localStorage.setItem('userEmail', email);
       showPopup('success','Welcome back','Signing you in…');
@@ -193,19 +234,16 @@
     }
   });
 
-  // toggle: out-left (fade+zoom-out) then in-right (fade+zoom-in)
+  // toggle UI
   switchText.addEventListener('click', () => {
     formContent.classList.add('slide-out');
     setTimeout(()=> {
       formContent.classList.remove('slide-out');
-      // flip state and UI
       isSignUp = !isSignUp;
       formTitle.innerText = isSignUp ? 'Sign Up' : 'Sign In';
       authBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
       switchText.innerText = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
       passEl.value = '';
-
-      // animate incoming
       formContent.classList.add('slide-in');
       setTimeout(()=> formContent.classList.remove('slide-in'), 460);
     }, 260);
@@ -213,7 +251,9 @@
 
   passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') authBtn.click(); });
 
-
+  // Done
+  dbg('UI initialized — buttons active');
+});
 </script>
 </body>
 </html>
