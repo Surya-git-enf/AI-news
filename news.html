@@ -158,11 +158,23 @@ footer .nav-icon:hover { transform:scale(1.3); }
 /* FLOAT HEART */
 .pop-heart-svg{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(0.2); width:84px; height:84px; pointer-events:none; z-index:350; opacity:0; text-shadow:0 6px 20px rgba(255,45,85,0.32),0 2px 6px rgba(0,0,0,0.6); animation:none; will-change:transform,opacity; }
 @keyframes popHeartAnim { 0%{transform:translate(-50%,-50%) scale(0.2); opacity:0;}10%{transform:translate(-50%,-50%) scale(1.6); opacity:1;}60%{transform:translate(-50%,-50%) scale(1.0); opacity:1;}100%{transform:translate(-50%,-50%) scale(1.0); opacity:0;} }
+/* Logout button styles */
+.header-btn {
+    background:transparent;
+    border:none;
+    color:var(--black);
+    font-family:'GT Super', sans-serif;
+    font-size:14px;
+    cursor:pointer;
+    margin-left:12px;
+}
+.header-btn:hover { opacity:0.8; }
 </style>
 </head>
 
 <body>
 <header>
+    <button id="logout-btn" class="header-btn" style='background:transparent;border:none;color:var(--black);font-family:"GT Super",sans-serif;font-size:14px;cursor:pointer;margin-left:12px;' aria-label="Logout">Logout</button>
   <div class="title">Slide <span id="user-email"></span></div>
   <button class="header-heart-btn" id="header-heart" aria-label="Favorites" title="Favorites">
   <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
@@ -795,6 +807,15 @@ if (!restoreFeedFromLocal()) {
 
 /* Expose a debug function to force-send buffer from console */
 window.debugSendCategoriesNow = sendCurrentFeedFromNews;
+
+/* Logout button handler */
+document.getElementById('logout-btn').addEventListener('click', function () {
+    // Remove stored email
+    localStorage.removeItem('userEmail');
+    // Optionally clear any other session data if needed
+    // Redirect to login page
+    window.location.href = 'index.html';
+});
 </script>
 </body>
 </html>
