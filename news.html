@@ -4,21 +4,33 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SLIDE News</title>
-<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Charter:wght@400;700&family=GT+Super:wght@400;700&display=swap" rel="stylesheet">
 <style>
-* {box-sizing:border-box; margin:0; padding:0; font-family:"Poppins",sans-serif;}
-body {background:#000; color:#fff; height:100vh; display:flex; flex-direction:column; overflow:auto;}
+:root {
+  --white: #FFFFFF;
+  --beige: #F5F5DC;
+  --black: #000000;
+  --white-translucent: rgba(255, 255, 255, 0.9);
+  --white-semi-transparent: rgba(255, 255, 255, 0.2);
+  --black-translucent: rgba(0, 0, 0, 0.5);
+  --black-semi-transparent: rgba(0, 0, 0, 0.2);
+}
+* {box-sizing:border-box; margin:0; padding:0; font-family:'Charter', serif;}
+body {background:var(--white); color:var(--black); height:100vh; display:flex; flex-direction:column; overflow:auto;}
 
 /* HEADER */
 header {
   position:fixed; top:0; width:100%; height:80px;
   display:flex; align-items:center; justify-content:space-between;
   padding:0 25px;
-  background:linear-gradient(90deg,#ff0080,#ff8c00,#40e0d0);
+  background:linear-gradient(90deg,var(--beige), #D4AF37, var(--beige));
   border-bottom-left-radius:25px; border-bottom-right-radius:25px;
-  z-index:12; box-shadow:0 4px 20px rgba(255,0,128,0.5);
+  z-index:12; box-shadow:0 4px 20px rgba(0,0,0,0.2);
 }
-header .title {font-family: 'Russo One', sans-serif;font-size:30px; font-weight:800; letter-spacing:1px; display:flex; align-items:center;}
+header .title {font-family:'GT Super', sans-serif;font-size:30px; font-weight:800; letter-spacing:1px; display:flex; align-items:colorscheme:light;
+  --beige: #F5F5DC;
+  --black: #000000;
+}
 header .title #user-email {font-size:16px; font-weight:400; color:#fff; opacity:0.01; margin-left:10px;}
 .header-heart-btn {
   width: auto;
@@ -493,7 +505,7 @@ async function fetchNews(infinite = true) {
   try {
     const body = { email: userEmail, page: currentPage, pageSize: PAGE_SIZE };
     if (selectedCategory && selectedCategory !== "For You") { const mapped = categoryMap[selectedCategory] || selectedCategory; body.Categories = mapped; }
-    const res = await fetch("https://n8n-8ush.onrender.com/webhook/feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const res = await fetch("https://pulse-1-sq0g.onrender.com/webhook/feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error("Network response was not ok");
     const json = await res.json();
     const output = json.output || {};
@@ -531,9 +543,9 @@ async function fetchNews(infinite = true) {
 }
 
 /* ACTIONS FOR LIKE/SAVE (forward via n8n) */
-const N8N_FORWARD_URL = "https://n8n-8ush.onrender.com/webhook/request";
+const N8N_FORWARD_URL = "https://pulse-1-sq0g.onrender.com/webhook/request";
 async function sendAction(action, news) {
-  const urlMap = { like: 'https://pulse-1-x2sm.onrender.com/like', unlike: 'https://pulse-1-x2sm.onrender.com/unlike', save: 'https://pulse-1-x2sm.onrender.com/save', unsave: 'https://pulse-1-x2sm.onrender.com/unsave' };
+  const urlMap = { like: 'https://pulse-1-sq0g.onrender.com/like', unlike: 'https://pulse-1-sq0g.onrender.com/unlike', save: 'https://pulse-1-sq0g.onrender.com/save', unsave: 'https://pulse-1-sq0g.onrender.com/unsave' };
   const target = urlMap[action];
   if (!target) { console.error('sendAction: unknown action ->', action); return; }
   const requestBody = { email: userEmail || '', headline: news.headline || '', news: news.description || '', url: news.link || '', image_url: news.image || '', categories: Array.isArray(news.categories) ? news.categories : (typeof news.categories === 'string' ? news.categories.split(',').map(s=>s.trim()).filter(Boolean) : []) };
@@ -587,7 +599,7 @@ async function addCategoryToBufferOnly(newsItem) {
 
 /* send first 3 items from buffer (used by news.html). returns true on successful send. */
 async function sendCurrentFeedFromNews() {
-  const SEND_URL = "https://n8n-8ush.onrender.com/webhook/currentfeed";
+  const SEND_URL = "https://pulse-1-sq0g.onrender.com/webhook/currentfeed";
   try {
     const raw = localStorage.getItem(CATEGORIES_BUFFER_KEY);
     const buf = raw ? JSON.parse(raw) : [];

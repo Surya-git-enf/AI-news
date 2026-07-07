@@ -237,7 +237,7 @@ async function fetchbookmark(email){
   if (!email) throw new Error('No email available');
   const wrapper = { link: "https://pulse-1-sq0g.onrender.com/getsaved", method: "GET", body: { email: email } };
   try {
-    const r = await fetch("https://n8n-8ush.onrender.com/webhook/request", {
+    const r = await fetch("https://pulse-1-sq0g.onrender.com/webhook/request", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(wrapper)

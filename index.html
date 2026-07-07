@@ -5,33 +5,42 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title> Sign Up / Sign In </title>
 <style>
-  body{margin:0;font-family:"Poppins",sans-serif;height:100vh;background:linear-gradient(135deg,#6ec6ff,#ff914d);display:flex;justify-content:center;align-items:center;overflow:hidden;transition:opacity .8s ease}
-  .fade-out{opacity:0}
-  /* keep original glass card look */
-  .auth-container{width:250px;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 0 25px rgba(255,255,255,.7);padding:30px;text-align:center;position:relative;overflow:hidden;animation:fadeIn 420ms ease}
-  @keyframes fadeIn{from{opacity:0;transform:scale(.995)}to{opacity:1;transform:scale(1)}}
+:root {
+  --white: #FFFFFF;
+  --beige: #F5F5DC;
+  --black: #000000;
+  --white-translucent: rgba(255, 255, 255, 0.9);
+  --white-semi-transparent: rgba(255, 255, 255, 0.2);
+  --black-translucent: rgba(0, 0, 0, 0.5);
+  --black-semi-transparent: rgba(0, 0, 0, 0.2);
+}
+body{margin:0;font-family:'Charter', serif;height:100vh;background:linear-gradient(135deg, var(--white), var(--beige));display:flex;justify-content:center;align-items:center;overflow:hidden;transition:opacity .8s ease}
+.fade-out{opacity:0}
+/* keep original glass card look */
+.auth-container{width:250px;background:var(--white-semi-transparent);backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 0 25px var(--white-translucent);padding:30px;text-align:center;position:relative;overflow:hidden;animation:fadeIn 420ms ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(.995)}to{opacity:1;transform:scale(1)}}
 
-  .auth-container h2{color:white;margin-bottom:20px;text-shadow:0 0 10px white}
-  input{width:80%;padding:12px;margin:8px 0;border:none;border-radius:25px;outline:none;text-align:center;font-size:16px;box-shadow:0 0 5px rgba(255,255,255,.6);background:rgba(255,255,255,.9)}
-  button{width:85%;padding:12px;margin-top:10px;border:none;border-radius:25px;font-size:17px;font-weight:700;color:white;cursor:pointer;background:linear-gradient(90deg,#ff914d,#ffb84d);box-shadow:0 0 15px rgba(255,255,255,.5);transition:all .25s}
-  button:hover{transform:scale(1.04);box-shadow:0 0 25px white}
-  .switch{margin-top:18px;color:white;font-size:14px;cursor:pointer}
-  .loading{border:4px solid rgba(255,255,255,.4);border-top:4px solid white;border-radius:50%;width:25px;height:25px;margin:12px auto;animation:spin 1s linear infinite;display:none}
-  @keyframes spin{to{transform:rotate(360deg)}}
+.auth-container h2{font-family:'GT Super', sans-serif;color:var(--black);margin-bottom:20px;text-shadow:0 0 10px rgba(0,0,0,0.1)}
+input{width:80%;padding:12px;margin:8px 0;border:none;border-radius:25px;outline:none;text-align:center;font-size:16px;box-shadow:0 0 5px rgba(0,0,0,0.1);background:var(--white-translucent)}
+button{width:85%;padding:12px;margin-top:10px;border:none;border-radius:25px;font-size:17px;font-weight:700;color:var(--white);cursor:pointer;background:linear-gradient(90deg,var(--beige), #D4AF37);box-shadow:0 0 15px rgba(0,0,0,0.2);transition:all .25s}
+button:hover{transform:scale(1.04);box-shadow:0 0 25px rgba(0,0,0,0.2)}
+.switch{margin-top:18px;color:var(--black);font-size:14px;cursor:pointer}
+.loading{border:4px solid rgba(0,0,0,0.1);border-top:4px solid var(--black);border-radius:50%;width:25px;height:25px;margin:12px auto;animation:spin 1s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:linear-gradient(135deg,#007bff,#00c6ff);color:white;border-radius:16px;padding:18px 22px;box-shadow:0 0 30px rgba(0,150,255,.6);text-align:center;opacity:0;pointer-events:none;transition:all .28s}
-  .popup.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-  .popup.error{background:linear-gradient(135deg,#ff5252,#ff1744)}
+.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:linear-gradient(135deg,var(--beige), #D4AF37);color:var(--black);border-radius:16px;padding:18px 22px;box-shadow:0 0 30px rgba(0,0,0,0.2);text-align:center;opacity:0;pointer-events:none;transition:all .28s}
+.popup.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.popup.error{background:linear-gradient(135deg,#ff5252,#ff1744)}
 
-  /* transition: outgoing = slide left + fade + zoom-out */
-  .slide-out{animation:slideOut .36s forwards}
-  @keyframes slideOut{from{transform:translateX(0) scale(1);opacity:1}to{transform:translateX(-28%) scale(.92);opacity:0}}
+/* transition: outgoing = slide left + fade + zoom-out */
+.slide-out{animation:slideOut .36s forwards}
+@keyframes slideOut{from{transform:translateX(0) scale(1);opacity:1}to{transform:translateX(-28%) scale(.92);opacity:0}}
 
-  /* incoming = slide from right + fade + zoom-in */
-  .slide-in{animation:slideIn .42s forwards}
-  @keyframes slideIn{from{transform:translateX(30%) scale(.96);opacity:0}60%{transform:translateX(-4%) scale(1.02);opacity:1}to{transform:translateX(0) scale(1);opacity:1}}
+/* incoming = slide from right + fade + zoom-in */
+.slide-in{animation:slideIn .42s forwards}
+@keyframes slideIn{from{transform:translateX(30%) scale(.96);opacity:0}60%{transform:translateX(-4%) scale(1.02);opacity:1}to{transform:translateX(0) scale(1);opacity:1}}
 
-  @media (max-width:420px){ .auth-container{width:92vw;padding:22px} input{width:90%} button{width:90%} }
+@media (max-width:420px){ .auth-container{width:92vw;padding:22px} input{width:90%} button{width:90%} }
 </style>
 </head>
 <body>
@@ -56,8 +65,11 @@
   - Ensures event listeners are attached after DOM content loaded.
 */
 
-const SUPABASE_URL = 'https://cmsyrrnekokiqeonfqdo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3lycm5la29ra29raW...'; // keep but can be blank for testing
+// Supabase credentials - should be set via environment variables in production
+// Example: const SUPABASE_URL = process.env.SUPABASE_URL || '';
+//          const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = '';
+const SUPABASE_ANON_KEY = '';
 
 console.log('[auth] module loaded');
 
