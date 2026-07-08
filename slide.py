@@ -36,6 +36,7 @@ POST    /get_saved       Returns the full news rows the user has saved.
 POST    /list_chats      Lists a user's Nova conversations (name + preview + count).
                          Body: {email}
 POST    /get_chat        Returns the full message list for one conversation.
+                         Body: {email, conversation_name}
 POST    /getchat         Alias of /get_chat (same body/response).
                          Body: {email, conversation_name}
 POST    /append_chat     Appends a message into a conversation's `chat_history`
@@ -50,8 +51,10 @@ POST    /chat            Talks to Nova: grounds the reply in matching rows from 
                          both the user's message and Nova's reply into `chat_history`
                          under the given (or auto-created) conversation name.
                          Body: {email, message, conversation_name?}
+POST    /ws/chat         WebSocket endpoint for streaming Nova chat.
+POST    /update_suggestions
+                         Updates user's category suggestions based on three lists.
 ──────────────────────────────────────────────────────────────────────────
-
 Supabase schema this file relies on:
   news  : headline, news, notification, categories, link, image, original, published_date
   users : email, likes(_text), saved(_text), suggestions(_text), history(_text),
@@ -62,10 +65,11 @@ import re
 import json
 import time
 import logging
+import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
@@ -86,13 +90,15 @@ log = logging.getLogger("slide")
 SUPABASE_URL   = os.getenv("SUPABASE_URL")
 SUPABASE_KEY   = os.getenv("SUPABASE_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "8185149536")
 
 if not SUPABASE_URL or not SUPABASE_KEY or not GEMINI_API_KEY:
     raise Exception("Missing environment variables: SUPABASE_URL / SUPABASE_KEY / GEMINI_API_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # behavior constants
 DEFAULT_MAX_RESULTS = 15         # how many items /get_news returns by default
@@ -100,6 +106,9 @@ MIN_UNSEEN_TARGET   = 5          # if fewer than this match category filter, bro
 NEWS_POOL_LIMIT      = 150       # how many recent rows to pull from Supabase to filter from
 MAX_HISTORY_ITEMS    = 500       # cap on stored `history` (seen-links) length per user
 CHAT_CONTEXT_ROWS    = 3         # how many matching news rows to ground a /chat reply in
+
+# Fallback reply for Nova when generation fails
+FALLBACK_REPLY = "Oops! My newsroom just had a paper jam — let’s try that again."
 
 app = FastAPI(title="Slide - AI News Aggregator")
 
@@ -206,12 +215,12 @@ entertainment, sub categories - Movies, Music, Celebrity News, OTT / Streaming, 
 lifestyle & society, sub categories - Health & Wellness, Mental Health, Food & Nutrition, Travel, Fashion, Fitness
 
 JSON FORMAT:
-{{
+{
   "headline": "",
   "news": "",
   "notification": "",
   "categories": ""
-}}
+}
 
 Title: {title}
 Article: {article}
@@ -506,14 +515,21 @@ def find_related_news(message: str, limit: int = CHAT_CONTEXT_ROWS) -> List[Dict
     return [build_news_item(r) for _, r in scored[:limit]]
 
 
-def generate_nova_reply(message: str, prior_messages: List[Dict[str, str]]) -> str:
+def compose_nova_reply(message: str, prior_messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    """Compose Nova's reply and grounding info without making the Gemini call.
+    Returns dict with keys: 'reply' (str), 'grounded_in' (str: 'local'|'rss'|'none').
+    The actual Gemini call should be done elsewhere; this function only prepares
+    the prompt and determines grounding.
+    """
     context_rows = find_related_news(message)
     context_block = ""
+    grounded_in = "none"
     if context_rows:
         lines = []
         for item in context_rows:
             lines.append(f"- {item['headline']}: {item['news'][:220]}")
         context_block = "Relevant stories from Slide's news database:\n" + "\n".join(lines)
+        grounded_in = "local"
 
     history_block = ""
     if prior_messages:
@@ -538,8 +554,47 @@ User: {message}
 Nova:
 """.strip()
 
-    response = model.generate_content(prompt)
-    return (response.text or "").strip()
+    # We do NOT call the model here; just return the prompt and grounding info.
+    # The caller will invoke model.generate_content(prompt) and handle errors.
+    return {
+        "prompt": prompt,
+        "grounded_in": grounded_in,
+        "history_block": history_block,
+        "context_block": context_block,
+    }
+
+
+def generate_nova_reply(message: str, prior_messages: List[Dict[str, str]]) -> str:
+    """Generate a reply from Nova, with graceful fallback."""
+    try:
+        composed = compose_nova_reply(message, prior_messages)
+        response = model.generate_content(composed["prompt"])
+        reply = (response.text or "").strip()
+        if not reply:
+            return FALLBACK_REPLY
+        return reply
+    except Exception as e:
+        log.error(f"/chat generation failed: {e}")
+        return FALLBACK_REPLY
+
+
+# ─────────────────────────── TELEGRAM HELPER ────────────────
+def send_telegram_message(text: str) -> None:
+    """Send a message via Telegram Bot API. Silently fails if token missing."""
+    if not TELEGRAM_BOT_TOKEN:
+        log.warning("Telegram bot token not set; skipping message send.")
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": text
+    }
+    try:
+        resp = requests.post(url, json=payload, timeout=5)
+        if not resp.ok:
+            log.error(f"Telegram send failed: {resp.status_code} {resp.text}")
+    except Exception as e:
+        log.error(f"Telegram send exception: {e}")
 
 
 # ─────────────────────────── ROUTES: CORE ───────────────────
@@ -565,6 +620,8 @@ def root():
             "POST /rename_chat": "Rename a conversation",
             "POST /delete_chat": "Delete a conversation",
             "POST /chat": "Talk to Nova (Gemini-powered, grounded in Slide's news)",
+            "POST /ws/chat": "WebSocket endpoint for streaming Nova chat",
+            "POST /update_suggestions": "Update user's category suggestions",
         },
     }
 
@@ -830,10 +887,8 @@ def delete_chat(req: DeleteChatRequest):
     idx = find_conv_index(chat_list, req.conversation_name)
     if idx is None:
         return JSONResponse(status_code=404, content={"error": "conversation not found"})
-
     del chat_list[idx]
     save_user_chat_history(req.user_email, chat_list)
-
     return {"status": "ok", "deleted": req.conversation_name}
 
 
@@ -862,7 +917,7 @@ def chat(req: ChatRequest):
         reply_text = generate_nova_reply(req.message, prior_messages)
     except Exception as e:
         log.error(f"/chat generation failed: {e}")
-        return JSONResponse(status_code=500, content={"error": "failed to generate a reply"})
+        return JSONResponse(status_code=500, content={"error": "failed to generate a reply: " + str(e)})
 
     chat_list = append_messages(chat_list, conversation_name, [
         {"Sir": req.message},
@@ -876,6 +931,258 @@ def chat(req: ChatRequest):
     }
 
 
+# ─────────────────────────── WEBSOCKET CHAT ────────────────
+# Status message pools per stage
+THINKING_MESSAGES = [
+    "🧠 Hang tight — Nova's grabbing a coffee and scanning the desk...",
+    "🧠 One sec, letting the gears in the newsroom spin up...",
+    "🧠 Nova's cracking her knuckles, about to dig in...",
+]
+SEARCHING_LOCAL_MESSAGES = [
+    "📚 Rifling through Slide's back issues for you...",
+    "📚 Checking if we've already scooped this one...",
+    "📚 Peeking into the archive drawer marked 'recent'...",
+]
+SEARCHING_RSS_MESSAGES = [
+    "📡 Nothing on file — patching into the newswire...",
+    "📡 Going live to the source for the freshest take...",
+    "📡 Dialing into the wire room for a fresh lead...",
+]
+WRITING_MESSAGES = [
+    "✍️ Nova's tapping away at the keyboard...",
+    "✍️ Turning the raw story into something worth reading...",
+    "✍️ Just cleaning up the copy before it hits your screen...",
+]
+
+
+def _random_from_pool(pool: List[str]) -> str:
+    return random.choice(pool)
+
+
+@app.websocket("/ws/chat")
+async def ws_chat(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_json()
+            email: str = data.get("email", "")
+            message: str = data.get("message", "")
+            conversation_name: Optional[str] = data.get("conversation_name")
+
+            if not email:
+                await websocket.send_json({
+                    "type": "final",
+                    "reply": "I need your email to keep chatting — please provide it.",
+                    "conversation_name": "",
+                    "grounded_in": "none"
+                })
+                continue
+
+            # Retrieve or create chat history
+            chat_list = get_user_chat_history(email)
+            if conversation_name is None:
+                conversation_name = unique_conv_name(chat_list, slugify_conv_name(message))
+
+            prior_messages = conv_messages(chat_list, conversation_name)
+
+            # Build history block (same as in compose)
+            history_block = ""
+            if prior_messages:
+                turns = []
+                for m in prior_messages[-6:]:
+                    for sender, text in m.items():
+                        turns.append(f"{sender}: {text}")
+                history_block = "Recent conversation:\n" + "\n".join(turns)
+
+            # Determine if this is a news request based on presence of keywords
+            words = [w for w in re.findall(r"[a-zA-Z]{4,}", message.lower())]
+            is_news_request = bool(words)
+
+            # Initialize grounding info
+            context_rows: List[Dict[str, Any]] = []
+            context_block = ""
+            grounded_in = "none"
+
+            # Status: thinking
+            await websocket.send_json({
+                "type": "status",
+                "stage": "thinking",
+                "text": _random_from_pool(THINKING_MESSAGES)
+            })
+
+            if is_news_request:
+                # Searching local (Supabase)
+                await websocket.send_json({
+                    "type": "status",
+                    "stage": "searching_local",
+                    "text": _random_from_pool(SEARCHING_LOCAL_MESSAGES)
+                })
+                context_rows = find_related_news(message)
+                if context_rows:
+                    lines = []
+                    for item in context_rows:
+                        lines.append(f"- {item['headline']}: {item['news'][:220]}")
+                    context_block = "Relevant stories from Slide's news database:\n" + "\n".join(lines)
+                    grounded_in = "local"
+                else:
+                    # No local results, try searching RSS (simulated)
+                    await websocket.send_json({
+                        "type": "status",
+                        "stage": "searching_rss",
+                        "text": _random_from_pool(SEARCHING_RSS_MESSAGES)
+                    })
+                    # In a real implementation we might trigger a background fetch here.
+                    # For now we treat as none.
+                    grounded_in = "rss"
+            else:
+                # Not a news request; we still go to writing stage.
+                pass
+
+            # Status: writing
+            await websocket.send_json({
+                "type": "status",
+                "stage": "writing",
+                "text": _random_from_pool(WRITING_MESSAGES)
+            })
+
+            # Compose prompt and attempt generation
+            try:
+                composed = compose_nova_reply(message, prior_messages)
+                response = model.generate_content(composed["prompt"])
+                reply = (response.text or "").strip()
+                if not reply:
+                    reply = FALLBACK_REPLY
+            except Exception as e:
+                log.error(f"/ws/chat generation failed: {e}")
+                reply = FALLBACK_REPLY
+
+            # Update chat history
+            chat_list = append_messages(chat_list, conversation_name, [
+                {"Sir": message},
+                {"Nova": reply},
+            ])
+            save_user_chat_history(email, chat_list)
+
+            # Send final frame
+            await websocket.send_json({
+                "type": "final",
+                "reply": reply,
+                "conversation_name": conversation_name,
+                "grounded_in": grounded_in
+            })
+    except WebSocketDisconnect:
+        # Client disconnected; clean up if needed
+        pass
+    except Exception as e:
+        log.error(f"WebSocket error: {e}")
+        try:
+            await websocket.send_json({
+                "type": "final",
+                "reply": "Something went wrong on our end. Please reconnect and try again.",
+                "conversation_name": "",
+                "grounded_in": "none"
+            })
+        except Exception:
+            pass
+    finally:
+        await websocket.close()
+
+
+# ─────────────────────────── UPDATE SUGGESTIONS ────────────
+class UpdateSuggestionsRequest(BaseModel):
+    email: EmailStr
+    categories1: Optional[List[str]] = None
+    categories2: Optional[List[str]] = None
+    categories3: Optional[List[str]] = None
+
+
+@app.post("/update_suggestions")
+def update_suggestions(req: UpdateSuggestionsRequest):
+    email = req.email
+    # Normalize input lists (ensure they are lists)
+    cat1 = req.categories1 or []
+    cat2 = req.categories2 or []
+    cat3 = req.categories3 or []
+
+    # We'll work with lowercased versions for counting/dedup, but keep first original case.
+    freq: Dict[str, int] = {}
+    source_priority: Dict[str, int] = {}  # lower number = higher priority
+    original_map: Dict[str, str] = {}     # lower -> first original seen
+
+    def process_list(categories: List[str], priority: int):
+        for cat in categories:
+            if not isinstance(cat, str):
+                continue
+            cat_lower = cat.strip().lower()
+            if not cat_lower:
+                continue
+            freq[cat_lower] = freq.get(cat_lower, 0) + 1
+            if cat_lower not in source_priority or priority < source_priority[cat_lower]:
+                source_priority[cat_lower] = priority
+            if cat_lower not in original_map:
+                original_map[cat_lower] = cat  # keep first occurrence
+
+    process_list(cat1, 1)
+    process_list(cat2, 2)
+    process_list(cat3, 3)
+
+    # Sort by frequency desc, then source priority asc
+    sorted_cats = sorted(freq.items(), key=lambda x: (-x[1], source_priority[x[0]]))
+    # Take top 2 unique categories
+    top2_lower = [cat for cat, _ in sorted_cats[:2]]
+    top2_original = [original_map[cat] for cat in top2_lower]
+
+    # Fetch existing suggestions
+    user_row = get_user_row(email, select="suggestions")
+    existing_raw = user_row.get("suggestions") if user_row else []
+    existing = _as_list(existing_raw)  # ensure list of strings
+    # Normalize existing for comparison
+    existing_lower_set = {str(s).strip().lower() for s in existing if isinstance(s, str)}
+
+    # Build final list
+    final: List[str] = []
+    # Add top 2
+    final.extend(top2_original)
+    # Find first existing suggestion not already in top2 (case-insensitive)
+    added_third = False
+    for sug in existing:
+        if not isinstance(sug, str):
+            continue
+        sug_low = sug.strip().lower()
+        if sug_low not in {c.lower() for c in top2_original}:
+            final.append(sug)
+            added_third = True
+            break
+    # Append remaining existing suggestions in order, skipping duplicates, until we have 4
+    for sug in existing:
+        if not isinstance(sug, str):
+            continue
+        sug_low = sug.strip().lower()
+        if sug_low in {c.lower() for c in final}:
+            continue
+        final.append(sug)
+        if len(final) >= 4:
+            break
+
+    # Ensure we don't exceed 4
+    final = final[:4]
+
+    # Persist back to Supabase
+    try:
+        supabase.table("users").update({"suggestions": final}).eq("email", email).execute()
+    except Exception as e:
+        log.error(f"Failed to update suggestions for {email}: {e}")
+        # Still try to send telegram? We'll send failure message.
+        send_telegram_message(f"{email} suggestions update FAILED: {e}")
+        return JSONResponse(status_code=500, content={"error": "failed to update suggestions"})
+
+    # Send telegram success notification
+    send_telegram_message(f"{email} suggestions updated successfully")
+
+    return {"status": "ok", "suggestions": final}
+
+
+# ─────────────────────────── MAIN ───────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
