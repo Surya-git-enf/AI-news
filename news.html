@@ -1,3 +1,4 @@
+<!-- test comment -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -478,7 +479,7 @@ function createNewsCard(news) {
     e.stopPropagation();
     const nowSaved = saveBtn.classList.toggle('saved');
     card._newsData._saved = nowSaved;
-    feedToLocal(); // Note: this is a typo; should be saveFeedToLocal()
+    saveFeedToLocal(); // Note: this is a typo; should be saveFeedToLocal()
     if (nowSaved) { /* showToast removed */ sendAction('save', news); } else { /* showToast removed */ sendAction('unsave', news); }
   });
 
@@ -503,13 +504,9 @@ function createNewsCard(news) {
   observer.observe(card);
   return card;
 }
-
-function escapeHtml(str = '') {
-  return String(str || '').replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'",''');
+function escapeHtml(str = ) {
+  return String(str);
 }
-
-/* FETCH NEWS */
-async function fetchNews(infinite = true) {
   if (fetchingInProgress) return;
   fetchingInProgress = true;
   if (!infinite) { container.innerHTML = ""; shownNewsSet.clear(); /* currentPage = 1; keepFetching = true; */ }
