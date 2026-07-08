@@ -222,16 +222,7 @@ textarea#messageInput{width:100%;background:transparent;border:0;outline:none;co
 <script>
 /* ===== CONFIG ===== */
 const USER_EMAIL = (new URLSearchParams(window.location.search)).get('email') || "s8296659@gmail.com";
-const N8N_PROXY = "https://pulse-1-sq0g.onrender.com/webhook/request";
-const PLAYABLE_BASE = "https://pulse-1-sq0g.onrender.com".replace(/\/$/,'');
-const ENDPOINTS = {
-  list: PLAYABLE_BASE + "/list_chats",
-  get: PLAYABLE_BASE + "/get_chat",
-  append: PLAYABLE_BASE + "/append_chat",
-  rename: PLAYABLE_BASE + "/rename_chat",
-  delete: PLAYABLE_BASE + "/delete_chat",
-  chat_direct: "https://pulse-1-sq0g.onrender.com/chat"
-};
+const PLAYABLE_BASE = "https://pulse-1-sq0g.onrender.com".replace(/\/+$/, "");
 
 /* UI refs */
 const openPanelBtn = document.getElementById('openPanelBtn');
@@ -269,25 +260,67 @@ function el(tag, cls){ const d=document.createElement(tag); if(cls) d.className=
 function showToast(text, ms=1500){ toast.textContent = text; toast.style.display='block'; setTimeout(()=>{ toast.style.opacity='1'; },10); setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.style.display='none',220); }, ms); }
 function scrollToBottom(){ try{ messagesEl.scrollTop = messagesEl.scrollHeight; }catch(e){} }
 
-/* ===== proxy helper ===== */
-async function proxyRequest(targetLink, method, body){
-  const envelope = { link: targetLink, method: method.toUpperCase(), body: body || {} };
-  const r = await fetch(N8N_PROXY, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(envelope) });
-  if(!r.ok) throw new Error('Proxy failed: ' + r.status);
-  const txt = await r.text();
-  try{ return JSON.parse(txt); } catch(e){ return txt; }
+/* API wrappers - direct to backend */
+async function apiListChats(){
+  const resp = await fetch(PLAYABLE_BASE + "/list_chats", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({email: USER_EMAIL})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+async function apiGetChat(name){
+  const resp = await fetch(PLAYABLE_BASE + "/get_chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({email: USER_EMAIL, conversation_name: name})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+async function apiAppendMessage(name, sender, message){
+  const element = {};
+  element[name] = { "messages": [ { [sender]: message } ] };
+  const element_json_string = JSON.stringify(element);
+  const resp = await fetch(PLAYABLE_BASE + "/append_chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({user_email: USER_EMAIL, conversation_name: name, element_json_string: element_json_string})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+async function apiRename(oldName, newName){
+  const resp = await fetch(PLAYABLE_BASE + "/rename_chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({user_email: USER_EMAIL, old_name: oldName, new_name: newName})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+async function apiDelete(name){
+  const resp = await fetch(PLAYABLE_BASE + "/delete_chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({user_email: USER_EMAIL, conversation_name: name})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+async function apiChat(convName, message){
+  const resp = await fetch(PLAYABLE_BASE + "/chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({email: USER_EMAIL, message: message, conversation_name: convName || ""})
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
 }
 
-/* API wrappers */
-async function apiListChats(){ try{ return await proxyRequest(ENDPOINTS.list, 'POST', { email: USER_EMAIL }); }catch(e){ const link = ENDPOINTS.list + "?email=" + encodeURIComponent(USER_EMAIL); return await proxyRequest(link,'GET',{}); } }
-async function apiGetChat(name){ return await proxyRequest(ENDPOINTS.get, 'POST', { email: USER_EMAIL, conversation_name: name }); }
-async function apiAppendMessage(name, sender, message){ const element = {}; element[name] = { "messages": [ { [sender]: message } ] }; const element_json_string = JSON.stringify(element); return await proxyRequest(ENDPOINTS.append, 'POST', { user_email: USER_EMAIL, conversation_name: name, element_json_string: element_json_string }); }
-async function apiRename(oldName, newName){ return await proxyRequest(ENDPOINTS.rename, 'POST', { user_email: USER_EMAIL, old_name: oldName, new_name: newName }); }
-async function apiDelete(name){ return await proxyRequest(ENDPOINTS.delete, 'POST', { user_email: USER_EMAIL, conversation_name: name }); }
-async function apiN8nChat(convName, message){ return await proxyRequest(ENDPOINTS.chat_direct, 'POST', { userEmail: USER_EMAIL, message: message, conversationName: convName || "" }); }
-
 /* URL & image detection */
-const urlRegex = /(https?:\/\/[^\s"<>'`]+)/g;
+const urlRegex = /(https?:\/\/[^\s"<>'\`]+)/g;
 const imgExtRegex = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i;
 
 /* Render message with link/image handling (shimmer shown while loading) */
@@ -346,7 +379,7 @@ function renderConvList(listToRender = conversations){
     const p = el('div'); p.style.padding='12px'; p.style.color='var(--muted)'; p.textContent = 'No conversations found.';
     convList.appendChild(p); return;
   }
-  
+
   list.forEach(c=>{
     const item = el('div','conv-item');
     if(currentConv === c.name) item.classList.add('selected');
@@ -356,7 +389,7 @@ function renderConvList(listToRender = conversations){
     left.appendChild(title);
 
     const actions = el('div','conv-actions');
-    
+
     // RENAME BUTTON
     const editBtn = el('button','edit-icon'); editBtn.title='Rename';
     editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"></path><path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>`;
@@ -383,7 +416,7 @@ function renderConvList(listToRender = conversations){
 
     // Rename Handler
     editBtn.addEventListener('click',(ev)=>{ ev.stopPropagation(); editingConv = c.name; renameInput.value = c.name || ''; renameError.style.display='none'; renameModal.style.display='flex'; renameInput.focus(); });
-    
+
     // Delete Handler
     deleteBtn.addEventListener('click', async (ev)=>{
       ev.stopPropagation();
@@ -523,17 +556,19 @@ async function sendMessage(){
   messagesEl.appendChild(typingNode);
   scrollToBottom();
 
-  // call n8n
+  // call chat API directly
   let novaReply = null; let aiConvName = null;
   try{
-    const n8nResp = await apiN8nChat(currentConv || "", text);
-    if(typeof n8nResp === 'string') novaReply = n8nResp;
-    else if(n8nResp && typeof n8nResp === 'object'){
-      novaReply = n8nResp.output?.reply || n8nResp.output?.text || n8nResp.output?.message || n8nResp.reply || n8nResp.message;
-      aiConvName = n8nResp.conversation_name || n8nResp.conversationName || n8nResp.conversation || n8nResp.meta?.conversation_name || n8nResp.output?.conversation_name;
-      for(const k of Object.keys(n8nResp)){ if(k.toLowerCase().includes('conversation') && typeof n8nResp[k] === 'string' && n8nResp[k].length < 120) aiConvName = aiConvName || n8nResp[k]; }
-      if(!novaReply){ try{ novaReply = JSON.stringify(n8nResp) }catch(e){ novaReply = String(n8nResp) } }
-    } else novaReply = String(n8nResp);
+    const resp = await apiChat(currentConv || "", text);
+    if(typeof resp === 'string') novaReply = resp;
+    else if(resp && typeof resp === 'object'){
+      novaReply = resp.reply || resp.output?.reply || resp.output?.text || resp.output?.message || resp.message;
+      aiConvName = resp.conversation_name || resp.conversationName || resp.conversation || resp.meta?.conversation_name || resp.output?.conversation_name;
+      // fallback search
+      if(!aiConvName){
+        for(const k of Object.keys(resp)){ if(k.toLowerCase().includes('conversation') && typeof resp[k] === 'string' && resp[k].length < 120) aiConvName = aiConvName || resp[k]; }
+      }
+    } else novaReply = String(resp);
   }catch(e){
     console.error('n8n chat error', e);
     novaReply = "Sorry — Nova couldn't generate a reply right now.";
@@ -634,7 +669,6 @@ function startPlaceholderTyping(){
 }
 messageInput.addEventListener('focus', ()=>{ clearTimeout(phTimer); messageInput.placeholder=''; });
 messageInput.addEventListener('blur', ()=>{ if(!messageInput.value.trim()) startPlaceholderTyping(); });
-startPlaceholderTyping();
 
 /* back button logic */
 backBtn.addEventListener('click', ()=>{ if(panel.classList.contains('open')){ closePanel(); return; } try{ if(window.history && window.history.length>1) window.history.back(); }catch(e){} });
