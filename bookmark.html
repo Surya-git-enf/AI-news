@@ -4,28 +4,28 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Bookmark — SLIDE</title>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Charter:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#050505;
-    --card:#0f0f0f;
-    --muted:rgba(255,255,255,0.72);
-    --white:#ffffff;
+    --bg:#ffffff;
+    --card:#f8f9fa;
+    --muted:#6c757d;
+    --white:#000000;
     --gap:12px;
     --card-height:120px; /* default comfortable height */
   }
   *{box-sizing:border-box;}
-  html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:"Poppins",sans-serif;-webkit-font-smoothing:antialiased;}
+  html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:"Charter",serif;-webkit-font-smoothing:antialiased;}
   header{
     height:64px; display:flex; align-items:center; gap:12px; padding:0 12px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
+    border-bottom:1px solid rgba(0,0,0,0.1);
     position:sticky; top:0; background:var(--bg); z-index:20;
   }
   .back-btn{
     width:44px; height:44px; display:flex; align-items:center; justify-content:center;
     background:transparent; border:0; color:var(--white); cursor:pointer;
   }
-  header h1{ font-family:"Pacifico",cursive; color:var(--white); font-size:20px; margin:0; text-align:center; flex:1; pointer-events:none; }
+  header h1{ font-family:"Charter",sans-serif; color:var(--white); font-size:20px; margin:0; text-align:center; flex:1; pointer-events:none; }
 
   /* MAIN LIST: fixed under header and scrollable */
   .list {
@@ -52,7 +52,7 @@
     background: var(--card);
     border-radius:12px;
     overflow: hidden;
-    border:1px solid rgba(255,255,255,0.04);
+    border:1px solid rgba(0,0,0,0.1);
     cursor: pointer;
     transition: transform .12s ease, box-shadow .12s ease;
     align-items: center; /* vertical centering */
@@ -60,9 +60,8 @@
     min-height: var(--card-height);
     max-height: var(--card-height);
     color: var(--white);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
   }
-  .card:focus, .card:hover{ transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.5); outline: none; }
+  .card:focus, .card:hover{ transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.15); outline: none; }
 
   .card-media {
     flex: 0 0 120px;
@@ -70,7 +69,7 @@
     width:150px;
     border-radius: 8px;
     overflow: hidden;
-    background:#111;
+    background:#e9ecef;
     display:flex; align-items:center; justify-content:center;
   }
   .card-media img{
@@ -92,14 +91,14 @@
 
   .headline{
     font-weight:800;
-    font-size:17px;
+    font-size:18px;
     margin:0;
-    line-height:1.15;
+    line-height:1.2;
     color:var(--white);
     overflow:hidden;
     text-overflow:ellipsis;
     display:-webkit-box;
-    -webkit-line-clamp:1;
+    -webkit-line-clamp:2;
     -webkit-box-orient:vertical;
     white-space:normal;
   }
@@ -108,45 +107,17 @@
     font-weight:400;
     font-size:14px;
     color:var(--muted);
-    line-height:1.3;
+    line-height:1.4;
     overflow:hidden;
     display:-webkit-box;
     -webkit-box-orient:vertical;
-    -webkit-line-clamp:2; /* show two lines preview */
+    -webkit-line-clamp:3;
   }
 
   /* hide categories visually but keep in DOM/payload */
-  .meta-row { display:block; height:0; visibility:hidden; margin-top:auto; }
+  .meta-row { display:block; height=0; visibility:hidden; margin-top:auto; }
 
   .empty{ text-align:center; color:var(--muted); margin:70px 20px; font-size:16px; }
-
-  /* gradients */
- .gradient-0 { background: linear-gradient(135deg, #0f2027 0%, #203a43 100%); }
-.gradient-1 { background: linear-gradient(135deg, #232526 0%, #414345 100%); }
-.gradient-2 { background: linear-gradient(135deg, #141e30 0%, #243b55 100%); }
-.gradient-3 { background: linear-gradient(135deg, #1e130c 0%, #9a8478 100%); }
-
-  /* shimmer skeleton */
-  .shimmer { position: relative; overflow: hidden; background: #151515; }
-  .shimmer::after { content: ""; position: absolute; top: 0; left: -150px; height: 100%; width: 150px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); animation: shimmer 1.2s infinite; }
-  @keyframes shimmer { 100% { left: 100%; } }
-
-  .skeleton-card { display:flex; gap:12px; background:var(--card); border-radius:12px; padding:12px; min-height:var(--card-height); align-items:center; }
-  .skeleton-img { width:120px; height:96px; border-radius:8px; }
-  .skeleton-text { flex:1; display:flex; flex-direction:column; gap:8px; }
-  .skeleton-line { height:14px; border-radius:4px; width:100%; }
-  .skeleton-line.short { width:60%; }
-
-  .list::-webkit-scrollbar{ width:10px; }
-  .list::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.04); border-radius:8px; }
-
-  /* Compact mode styles (applied when many items exist) */
-  .list.compact { gap:8px; padding:10px; }
-  .list.compact .card { min-height:86px; max-height:86px; padding:10px; border-radius:10px; }
-  .list.compact .card-media { flex:0 0 88px; height:64px; }
-  .list.compact .card-media img { width:88px; height:64px; border-radius:6px; }
-  .list.compact .headline { font-size:15px; }
-  .list.compact .desc { font-size:13px; -webkit-line-clamp:2; }
 
   /* responsive tweaks */
   @media (max-width:420px){
@@ -161,13 +132,14 @@
     .card-media { flex:0 0 88px; height:64px; }
     .card-media img{ width:88px; height:64px; }
     .headline{ font-size:15px; }
+    .desc{ font-size:13px; }
   }
 </style>
 </head>
 <body>
   <header>
     <button class="back-btn" id="backBtn" title="Back" aria-label="Back">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M15 18l-6-6 6-6"/>
       </svg>
     </button>
@@ -176,222 +148,219 @@
   </header>
 
   <div id="list" class="list" role="list" aria-live="polite"></div>
-  <div id="empty" class="empty" style="display:none;">No news loved yet? The favorites list is feeling lonely!</div>
+  <div id="empty" class="empty" style="display:none;">No news bookmarked yet? Start saving some articles!</div>
 
-<script>
-/* fallback article */
-const FALLBACK = {
-  image: "https://user-gen-media-assets.s3.amazonaws.com/seedream_images/6ad2729c-ad72-4a80-a43e-ab22c9f870d7.png",
-  headline: "Oops! Network connection lost.",
-  description: `Oops! Network connection lost. Please check your connection and try again`,
-  link: "https://timesofindia.indiatimes.com/",
-  categories: "Science, Health",
-  bookmark: true
-};
+  <script>
+  /* fallback article */
+  const FALLBACK = {
+    image: "https://user-gen-media-assets.s3.amazonaws.com/seedream_images/6ad2729c-ad72-4a80-a43e-ab22c9f870d7.png",
+    headline: "Oops! Network connection lost.",
+    description: `Oops! Network connection lost. Please check your connection and try again`,
+    link: "https://timesofindia.indiatimes.com/",
+    categories: "Science, Health",
+    bookmark: true
+  };
 
-function escapeHtml(s=''){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-function getEmail(){
-  const q = new URLSearchParams(location.search).get('email');
-  if (q) return q;
-  const ls = localStorage.getItem('userEmail');
-  if (ls) return ls;
-  return null;
-}
-const USER_EMAIL = getEmail();
-
-/* back button behavior */
-document.getElementById('backBtn').addEventListener('click', () => {
-  if (document.referrer && !document.referrer.includes('bookmark.html')) {
-    location.href = document.referrer;
-  } else if (history.length > 1) {
-    history.back();
-  } else {
-    location.href = `news.html${USER_EMAIL ? '?email='+encodeURIComponent(USER_EMAIL):''}`;
+  function escapeHtml(s=''){ return String(s||'').replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'",'''); }
+  function getEmail(){
+    const q = new URLSearchParams(location.search).get('email');
+    if (q) return q;
+    const ls = localStorage.getItem('userEmail');
+    if (ls) return ls;
+    return null;
   }
-});
+  const USER_EMAIL = getEmail();
 
-/* shimmer loader */
-function showShimmer(count=6){
-  const list=document.getElementById('list');
-  list.innerHTML='';
-  for(let i=0;i<count;i++){
-    const s=document.createElement('div');
-    s.className='skeleton-card';
-    s.innerHTML=`
-      <div class="skeleton-img shimmer"></div>
-      <div class="skeleton-text">
-        <div class="skeleton-line shimmer"></div>
-        <div class="skeleton-line shimmer"></div>
-        <div class="skeleton-line shimmer short"></div>
-      </div>`;
-    list.appendChild(s);
-  }
-}
-function hideShimmer(){
-  const list=document.getElementById('list');
-  list.querySelectorAll('.skeleton-card').forEach(el=>el.remove());
-}
-
-/* robust fetchbookmark (n8n wrapper forwarding) */
-async function fetchbookmark(email){
-  if (!email) throw new Error('No email available');
-  try {
-    const r = await fetch("https://pulse-1-sq0g.onrender.com/get_saved", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email })
-    });
-    if (!r.ok) {
-      const t = await r.text().catch(()=>'(no body)');
-      throw new Error(`status ${r.status}: ${t}`);
+  /* back button behavior */
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (document.referrer && !document.referrer.includes('bookmark.html')) {
+      location.href = document.referrer;
+    } else if (history.length > 1) {
+      history.back();
+    } else {
+      location.href = `news.html${USER_EMAIL ? '?email='+encodeURIComponent(USER_EMAIL):''}`;
     }
-    const data = await r.json();
-    // The backend returns { news: [...] } where each item is a parsed object
-    if (data && Array.isArray(data.news)) {
-      return data.news;
-    }
-    // fallback: maybe it returns the array directly
-    if (Array.isArray(data)) {
-      return data;
-    }
-    // otherwise return empty array
-    return [];
-  } catch (err) {
-    console.warn('fetchbookmark failed, using fallback', err);
-    return [FALLBACK];
-  }
-}
-
-/* createCard: categories included in payload but not shown */
-function createCard(item, index=0){
-  // normalize keys
-  const headline = item.headline || item.title || item.headlineText || item.name || '';
-  const desc = item.news || item.description || item.summary || item.desc || item.body || '';
-  const img = item.image_url || item.image || item.img || item.imageUrl || '';
-  const link = item.url || item.link || item.href || '';
-  const categories = item.categories || item.Categories || item.category || [];
-
-  const card = document.createElement('div');
-  const gradIndex = index % 4;
-  card.className = `card gradient-${gradIndex}`;
-  card.setAttribute('role','listitem');
-  card.setAttribute('tabindex','0');
-  card.innerHTML = `
-    <div class="card-media" aria-hidden="true">
-      <img src="${escapeHtml(img || 'https://via.placeholder.com/800x400?text=No+Image')}" alt="${escapeHtml(headline)}">
-    </div>
-    <div class="card-body">
-      <div class="headline" title="${escapeHtml(headline)}">${escapeHtml(headline.length > 200 ? headline.slice(0,200) + '...' : headline)}</div>
-      <div class="desc">${escapeHtml(desc.length > 800 ? desc.slice(0,800) + '...' : desc)}</div>
-      <div class="meta-row"><!-- categories hidden intentionally --></div>
-    </div>
-  `;
-
-  card.addEventListener('click', () => {
-    const payload = {
-      userEmail: USER_EMAIL,
-      headline: headline,
-      description: desc,
-      image: img,
-      link: link,
-      categories: Array.isArray(categories) ? categories : (typeof categories === 'string' ? categories.split(',').map(s=>s.trim()).filter(Boolean) : []),
-      bookmark: true
-    };
-    try { sessionStorage.setItem('fullnews_data', JSON.stringify(payload)); } catch(e){ console.warn('sessionStorage failed', e); }
-    const q = USER_EMAIL ? `?email=${encodeURIComponent(USER_EMAIL)}` : '';
-    location.href = 'fullnews.html' + q;
   });
 
-  card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-  });
-
-  return card;
-}
-
-/* init / render with compact mode behavior */
-(async function init(){
-  const list = document.getElementById('list');
-  const empty = document.getElementById('empty');
-
-  showShimmer(6);
-
-  if (!USER_EMAIL) {
-    hideShimmer();
-    list.innerHTML = '';
-    list.appendChild(createCard(FALLBACK, 0));
-    return;
+  /* shimmer loader */
+  function showShimmer(count=6){
+    const list=document.getElementById('list');
+    list.innerHTML='';
+    for(let i=0;i<count;i++){
+      const s=document.createElement('div');
+      s.className='skeleton-card';
+      s.innerHTML=`
+        <div class="skeleton-img shimmer"></div>
+        <div class="skeleton-text">
+          <div class="skeleton-line shimmer"></div>
+          <div class="skeleton-line shimmer"></div>
+          <div class="skeleton-line shimmer short"></div>
+        </div>`;
+      list.appendChild(s);
+    }
+  }
+  function hideShimmer(){
+    const list=document.getElementById('list');
+    list.querySelectorAll('.skeleton-card').forEach(el=>el.remove());
   }
 
-  try {
-    const res = await fetchbookmark(USER_EMAIL);
-
-    // normalization block
-    let items = [];
-    if (Array.isArray(res)) {
-      items = res;
-    } else if (res && typeof res === 'object') {
-      if (Array.isArray(res.items)) items = res.items;
-      else if (Array.isArray(res.output)) items = res.output;
-      else if (Array.isArray(res.saved)) {
-        items = res.saved.map(s => {
-          if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(_) { return { headline: s }; } }
-          }
-          return s;
-        });
-      } else {
-        for (let i=1;i<60;i++){
-          const h = res[`headline${i}`]; const n = res[`news${i}`];
-          if (!h && !n) break;
-          items.push({ headline: h, news: n, image_url: res[`image${i}`] || '', url: res[`link${i}`] || '' });
-        }
-        if (items.length === 0) {
-          const single = {};
-          single.headline = res.headline || res.title || res.headlineText || '';
-          single.news = res.news || res.description || res.summary || '';
-          single.image_url = res.image_url || res.image || res.img || res.imageUrl || '';
-          single.url = res.url || res.link || res.href || '';
-          single.categories = res.categories || res.Categories || [];
-          if (single.headline || single.news || single.image_url) items.push(single);
-        }
+  /* fetchbookmark - direct to backend */
+  async function fetchbookmark(email){
+    if (!email) throw new Error('No email available');
+    try {
+      const r = await fetch("https://pulse-1-sq0g.onrender.com/get_saved", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      if (!r.ok) {
+        const t = await r.text().catch(()=>'(no body)');
+        throw new Error(`status ${r.status}: ${t}`);
       }
+      const data = await r.json();
+      if (data && Array.isArray(data.news)) {
+        return data.news;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    } catch (err) {
+      console.warn('fetchbookmark failed, using fallback', err);
+      return [FALLBACK];
     }
+  }
 
-    // parse string entries if needed
-    items = items.map(it => {
-      if (typeof it === 'string') {
-        try { return JSON.parse(it); } catch(e){ try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(e2){ return { headline: it }; } }
-      }
-      return it;
+  /* createCard: categories included in payload but not shown */
+  function createCard(item, index=0){
+    // normalize keys
+    const headline = item.headline || item.title || item.headlineText || item.name || '';
+    const desc = item.news || item.description || item.summary || item.desc || item.body || '';
+    const img = item.image_url || item.image || item.img || item.imageUrl || '';
+    const link = item.url || item.link || item.href || '';
+    const categories = item.categories || item.Categories || item.category || [];
+
+    const card = document.createElement('div');
+    const gradIndex = index % 4;
+    card.className = `card`;
+    card.setAttribute('role','listitem');
+    card.setAttribute('tabindex','0');
+    card.innerHTML = `
+      <div class="card-media" aria-hidden="true">
+        <img src="${escapeHtml(img || 'https://via.placeholder.com/800x400?text=No+Image')}" alt="${escapeHtml(headline)}">
+      </div>
+      <div class="card-body">
+        <div class="headline" title="${escapeHtml(headline)}">${escapeHtml(headline.length > 200 ? headline.slice(0,200) + '...' : headline)}</div>
+        <div class="desc">${escapeHtml(desc.length > 800 ? desc.slice(0,800) + '...' : desc)}</div>
+        <div class="meta-row"><!-- categories hidden intentionally --></div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      const payload = {
+        userEmail: USER_EMAIL,
+        headline: headline,
+        description: desc,
+        image: img,
+        link: link,
+        categories: Array.isArray(categories) ? categories : (typeof categories === 'string' ? categories.split(',').map(s=>s.trim()).filter(Boolean) : []),
+        bookmark: true
+      };
+      try { sessionStorage.setItem('fullnews_data', JSON.stringify(payload)); } catch(e){ console.warn('sessionStorage failed', e); }
+      const q = USER_EMAIL ? `?email=${encodeURIComponent(USER_EMAIL)}` : '';
+      location.href = 'fullnews.html' + q;
     });
 
-    hideShimmer();
-    list.innerHTML = '';
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
 
-    if (!items || items.length === 0) {
-      empty.style.display = 'block';
-      empty.innerText = 'No news loved yet? The favorites list is feeling lonely!';
+    return card;
+  }
+
+  /* init / render with compact mode behavior */
+  (async function init(){
+    const list = document.getElementById('list');
+    const empty = document.getElementById('empty');
+
+    showShimmer(6);
+
+    if (!USER_EMAIL) {
+      hideShimmer();
+      list.innerHTML = '';
+      list.appendChild(createCard(FALLBACK, 0));
       return;
-    } else {
-      empty.style.display = 'none';
     }
 
-    // If many items, enable compact mode
-    if (items.length > 12) {
-      list.classList.add('compact');
-    } else {
-      list.classList.remove('compact');
-    }
+    try {
+      const res = await fetchbookmark(USER_EMAIL);
 
-    items.forEach((it, idx) => list.appendChild(createCard(it, idx)));
-  } catch (e) {
-    console.error('init fetch bookmark failed', e);
-    hideShimmer();
-    list.innerHTML = '';
-    list.appendChild(createCard(FALLBACK, 0));
-  }
-})();
+      // normalization block
+      let items = [];
+      if (Array.isArray(res)) {
+        items = res;
+      } else if (res && typeof res === 'object') {
+        if (Array.isArray(res.items)) items = res.items;
+        else if (Array.isArray(res.output)) items = res.output;
+        else if (Array.isArray(res.saved)) {
+          items = res.saved.map(s => {
+            if (typeof s === 'string') {
+              try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(_) { return { headline: s }; } }
+            }
+            return s;
+          });
+        } else {
+          for (let i=1;i<60;i++){
+            const h = res[`headline${i}`]; const n = res[`news${i}`];
+            if (!h && !n) break;
+            items.push({ headline: h, news: n, image_url: res[`image${i}`] || '', url: res[`link${i}`] || '' });
+          }
+          if (items.length === 0) {
+            const single = {};
+            single.headline = res.headline || res.title || res.headlineText || '';
+            single.news = res.news || res.description || res.summary || '';
+            single.image_url = res.image_url || res.image || res.img || res.imageUrl || '';
+            single.url = res.url || res.link || res.href || '';
+            single.categories = res.categories || res.Categories || [];
+            if (single.headline || single.news || single.image_url) items.push(single);
+          }
+        }
+      }
+
+      // parse string entries if needed
+      items = items.map(it => {
+        if (typeof it === 'string') {
+          try { return JSON.parse(it); } catch(e){ try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(e2){ return { headline: it }; } }
+        }
+        return it;
+      });
+
+      hideShimmer();
+      list.innerHTML = '';
+
+      if (!items || items.length === 0) {
+        empty.style.display = 'block';
+        empty.innerText = 'No news bookmarked yet? Start saving some articles!';
+        return;
+      } else {
+        empty.style.display = 'none';
+      }
+
+      // If many items, enable compact mode
+      if (items.length > 12) {
+        list.classList.add('compact');
+      } else {
+        list.classList.remove('compact');
+      }
+
+      items.forEach((it, idx) => list.appendChild(createCard(it, idx)));
+    } catch (e) {
+      console.error('init fetch bookmark failed', e);
+      hideShimmer();
+      list.innerHTML = '';
+      list.appendChild(createCard(FALLBACK, 0));
+    }
+  })();
 </script>
 </body>
 </html>
