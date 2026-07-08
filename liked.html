@@ -226,66 +226,33 @@ function hideShimmer(){
 
 /* robust fetchLiked (n8n wrapper forwarding) */
 async function fetchLiked(email){
-  if (!email) throw new Error('No email available');
-  const wrapper = { link: "https://pulse-1-sq0g.onrender.com/getliked", method: "GET", body: { email: email } };
-  try {
-    const r = await fetch("https://pulse-1-sq0g.onrender.com/webhook/request", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wrapper)
-    });
-    if (!r.ok) {
-      const t = await r.text().catch(()=>'(no body)');
-      throw new Error(`status ${r.status}: ${t}`);
-    }
-    const text = await r.text();
-
-    // Try parse once
-    let parsed;
-    try { parsed = JSON.parse(text); }
-    catch(e){
-      // sometimes the payload is double-escaped
-      try { parsed = JSON.parse(text.replace(/\\"/g,'"')); }
-      catch(e2){ parsed = text; }
-    }
-
-    // Normalize common shapes
-    if (Array.isArray(parsed)) {
-      return parsed.map(it => {
-        if (typeof it === 'string') {
-          try { return JSON.parse(it); } catch(_) { try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(_) { return { headline: it }; } }
-        }
-        return it;
+    if (!email) throw new Error('No email available');
+    try {
+      const r = await fetch("https://pulse-1-sq0g.onrender.com/get_liked", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
       });
-    }
-
-    if (parsed && typeof parsed === 'object') {
-      // support .liked or .saved arrays
-      if (Array.isArray(parsed.liked)) {
-        return parsed.liked.map(s => {
-          if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; } }
-          }
-          return s;
-        });
+      if (!r.ok) {
+        const t = await r.text().catch(()=>'(no body)');
+        throw new Error(`status ${r.status}: ${t}`);
       }
-      if (Array.isArray(parsed.saved)) {
-        return parsed.saved.map(s => {
-          if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){ try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; } }
-          }
-          return s;
-        });
+      const data = await r.json();
+      // The backend returns { news: [...] } where each item is a parsed object
+      if (data && Array.isArray(data.news)) {
+        return data.news;
       }
-      return parsed;
+      // fallback: maybe it returns the array directly
+      if (Array.isArray(data)) {
+        return data;
+      }
+      // otherwise return empty array
+      return [];
+    } catch (err) {
+      console.warn('fetchLiked failed, using fallback', err);
+      return [FALLBACK];
     }
-
-    return parsed;
-  } catch (err) {
-    console.warn('fetchLiked failed, using fallback', err);
-    return [FALLBACK];
   }
-}
 
 /* createCard: categories kept in payload but NOT shown */
 function createCard(item, index=0){

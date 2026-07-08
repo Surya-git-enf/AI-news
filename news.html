@@ -92,8 +92,8 @@ border:3px solid rgba(224,231,34,0.75)
 }
 .news-card.active { transform: scale(1); opacity:1; }
 
-/* Keep image as-is (not tinted) */
-.news-card img { width:100%; border-radius:18px; height:100%; object-fit:cover; margin-bottom:15px; box-shadow:0 8px 20px rgba(0,0,0,0.3); }
+/* Keep image as-is (not tinted) - show full image clearly */
+.news-card img { width:100%; height:auto; object-fit:contain; }
 
 /* text/icons remain white/default */
 .news-title { font-size:20px; font-weight:700; margin-bottom:10px; color:#fff; }
@@ -511,61 +511,102 @@ function escapeHtml(str = '') {
 async function fetchNews(infinite = true) {
   if (fetchingInProgress) return;
   fetchingInProgress = true;
-  if (!infinite) { container.innerHTML = ""; shownNewsSet.clear(); currentPage = 1; keepFetching = true; }
+  if (!infinite) { container.innerHTML = ""; shownNewsSet.clear(); /* currentPage = 1; keepFetching = true; */ }
   if (!keepFetching) { fetchingInProgress = false; return; }
   const shimmerElems = showShimmer(3);
   try {
-    const body = { email: userEmail, page: currentPage, pageSize: PAGE_SIZE };
-    if (selectedCategory && selectedCategory !== "For You") { const mapped = categoryMap[selectedCategory] || selectedCategory; body.Categories = mapped; }
-    const res = await fetch("https://pulse-1-sq0g.onrender.com/webhook/feed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error("Network response was not ok");
-    const json = await res.json();
-    const output = json.output || {};
-    shimmerElems.forEach(s => s.remove());
-    const items = [];
-    for (let i = 1; i <= PAGE_SIZE; i++) {
-      const h = output[`headline${i}`]; const n = output[`news${i}`];
-      if (!h || !n) continue;
-      if (String(h).toLowerCase().includes("headline1")) continue;
-      // compute background color so each item in this page gets different color
-      const indexForColor = (colorIndex + items.length) % newsColors.length;
-      items.push({ headline: h, description: n, image: output[`image${i}`] || "", categories: output[`categories${i}`] || "", link: output[`link${i}`] || "", backgroundColor: newsColors[indexForColor] });
+    const body = { email: userEmail };
+    if (selectedCategory && selectedCategory !== "For You") {
+      const mapped = categoryMap[selectedCategory] || selectedCategory;
+      body.categories = [mapped];
     }
-    if (items.length === 0) {
-      keepFetching = false;
-      const nm = document.createElement("div"); nm.className = "no-more"; nm.innerText = "No more news in this category."; container.appendChild(nm);
-      fetchingInProgress = false; saveFeedToLocal(); return;
-    }
-    items.forEach(item => {
-      const key = (item.headline + "||" + item.description).trim();
-      if (shownNewsSet.has(key)) return;
-      shownNewsSet.add(key);
-      const card = createNewsCard(item);
-      container.appendChild(card);
+    body.max_results = PAGE_SIZE;
+    const res = await fetch("https://pulse-1-sq0g.onrender.com/get_news", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
     });
-    saveFeedToLocal();
-    if (items.length < PAGE_SIZE) { keepFetching = false; const nm = document.createElement("div"); nm.className = "no-more"; nm.innerText = "No more news in this category."; container.appendChild(nm); } else { currentPage++; }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const newsItems = data.news || [];
+    const triggerRefresh = data.trigger_refresh || false;
+    shimmerElems.forEach(s => s.remove());
+    if (newsItems.length === 0) {
+      keepFetching = false;
+      const nm = document.createElement("div");
+      nm.className = "no-more";
+      nm.innerText = "No more news.";
+      container.appendChild(nm);
+      fetchingInProgress = false;
+      return;
+    }
+    newsItems.forEach(item => {
+      const description = item.news || "";
+      const image = item.image || "";
+      const link = item.link || "";
+      const categories = item.categories || "";
+      const headline = item.headline || "";
+      const indexForColor = (colorIndex + shownNewsSet.size) % newsColors.length;
+      const card = createNewsCard({
+        headline,
+        description,
+        image,
+        link,
+        categories,
+        backgroundColor: newsColors[indexForColor]
+      });
+      container.appendChild(card);
+      const key = (headline + "||" + description).trim();
+      shownNewsSet.add(key);
+    });
+    if (newsItems.length < PAGE_SIZE) {
+      keepFetching = false;
+    }
+    if (triggerRefresh) {
+      // trigger background fetch to keep news fresh
+      fetch("https://pulse-1-sq0g.onrender.com/news", { method: "GET" }).catch(() => {});
+    }
   } catch (err) {
     console.error("❌ Fetch error:", err);
     shimmerElems.forEach(s => s.remove());
-    const errEl = document.createElement("div"); errEl.className = "no-more"; errEl.innerText = "Could not load news. Check connection or try again."; container.appendChild(errEl);
+    const errEl = document.createElement("div");
+    errEl.className = "no-more";
+    errEl.innerText = "Could not load news. Check connection or try again.";
+    container.appendChild(errEl);
     keepFetching = false;
   }
   fetchingInProgress = false;
 }
 
-/* ACTIONS FOR LIKE/SAVE (forward via n8n) */
-const N8N_FORWARD_URL = "https://pulse-1-sq0g.onrender.com/webhook/request";
+/* ACTIONS FOR LIKE/SAVE (direct to backend) */
 async function sendAction(action, news) {
   const urlMap = { like: 'https://pulse-1-sq0g.onrender.com/like', unlike: 'https://pulse-1-sq0g.onrender.com/unlike', save: 'https://pulse-1-sq0g.onrender.com/save', unsave: 'https://pulse-1-sq0g.onrender.com/unsave' };
   const target = urlMap[action];
   if (!target) { console.error('sendAction: unknown action ->', action); return; }
-  const requestBody = { email: userEmail || '', headline: news.headline || '', news: news.description || '', url: news.link || '', image_url: news.image || '', categories: Array.isArray(news.categories) ? news.categories : (typeof news.categories === 'string' ? news.categories.split(',').map(s=>s.trim()).filter(Boolean) : []) };
-  const forwardPayload = { method: "POST", link: target, body: requestBody };
+  const requestBody = {
+    email: userEmail || '',
+    headline: news.headline || '',
+    news: news.description || '',
+    url: news.link || '',
+    image_url: news.image || '',
+    categories: Array.isArray(news.categories) ? news.categories : (typeof news.categories === 'string' ? news.categories.split(',').map(s=>s.trim()).filter(Boolean) : [])
+  };
   try {
-    const resp = await fetch(N8N_FORWARD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(forwardPayload) });
-    if (!resp.ok) { let text = ''; try { text = await resp.text(); } catch (_) {} console.error(`Forwarding failed (${resp.status}) for action ${action}. Response:`, text); } else { try { const json = await resp.json(); console.log(`Action "${action}" forwarded to n8n successfully:`, json); } catch (_) { console.log(`Action "${action}" forwarded to n8n (no-json response).`); } }
-  } catch (err) { console.error('sendAction: error forwarding to n8n', err); }
+    const resp = await fetch(target, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error(`sendAction failed (${resp.status}) for action ${action}:`, text);
+    } else {
+      // optionally log success
+      console.log(`Action "${action}" sent successfully`);
+    }
+  } catch (err) {
+    console.error('sendError: error sending action', err);
+  }
 }
 
 /* CATEGORIES BUFFER (store full news objects; attempt send when >=3) */

@@ -235,53 +235,27 @@ function hideShimmer(){
 /* robust fetchbookmark (n8n wrapper forwarding) */
 async function fetchbookmark(email){
   if (!email) throw new Error('No email available');
-  const wrapper = { link: "https://pulse-1-sq0g.onrender.com/getsaved", method: "GET", body: { email: email } };
   try {
-    const r = await fetch("https://pulse-1-sq0g.onrender.com/webhook/request", {
+    const r = await fetch("https://pulse-1-sq0g.onrender.com/get_saved", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wrapper)
+      body: JSON.stringify({ email: email })
     });
     if (!r.ok) {
       const t = await r.text().catch(()=>'(no body)');
       throw new Error(`status ${r.status}: ${t}`);
     }
-    const text = await r.text();
-
-    // parsing attempts (handles double-escaped JSON)
-    let parsed;
-    try { parsed = JSON.parse(text); }
-    catch(e){
-      try { parsed = JSON.parse(text.replace(/\\"/g,'"')); }
-      catch(e2){ parsed = text; }
+    const data = await r.json();
+    // The backend returns { news: [...] } where each item is a parsed object
+    if (data && Array.isArray(data.news)) {
+      return data.news;
     }
-
-    if (Array.isArray(parsed)) {
-      return parsed.map(it => {
-        if (typeof it === 'string') {
-          try { return JSON.parse(it); } catch(_) { 
-            try { return JSON.parse(it.replace(/\\"/g, '"')); } catch(_) { return { headline: it }; }
-          }
-        }
-        return it;
-      });
+    // fallback: maybe it returns the array directly
+    if (Array.isArray(data)) {
+      return data;
     }
-
-    if (parsed && typeof parsed === 'object') {
-      if (Array.isArray(parsed.saved)) {
-        return parsed.saved.map(s => {
-          if (typeof s === 'string') {
-            try { return JSON.parse(s); } catch(e){
-              try { return JSON.parse(s.replace(/\\"/g,'"')); } catch(e2){ return { headline: s }; }
-            }
-          }
-          return s;
-        });
-      }
-      return parsed;
-    }
-
-    return parsed;
+    // otherwise return empty array
+    return [];
   } catch (err) {
     console.warn('fetchbookmark failed, using fallback', err);
     return [FALLBACK];
