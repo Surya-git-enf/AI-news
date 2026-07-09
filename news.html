@@ -5,179 +5,229 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SLIDE News</title>
-<link href="https://fonts.googleapis.com/css2?family=Charter:wght@400;700&family=GT+Super:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --white: #FFFFFF;
-  --beige: #F5F5DC;
-  --black: #000000;
-  --white-translucent: rgba(255, 255, 255, 0.9);
-  --white-semi-transparent: rgba(255, 255, 255, 0.2);
-  --black-translucent: rgba(0, 0, 0, 0.5);
-  --black-semi-transparent: rgba(0, 0, 0, 0.2);
+  --bg:        #FAF7F2;
+  --text:      #22242A;
+  --muted:     #78716C;
+  --accent:    #FF6B4A;
+  --accent-2:  #2A9D8F;
+  --card-bg:   #FFFFFF;
+  --border:    #EDE7DE;
 }
-* {box-sizing:border-box; margin:0; padding:0; font-family:'Charter', serif;}
-body {background:var(--white); color:var(--black); height:100vh; display:flex; flex-direction:column; overflow:auto;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:auto;font-family:'Inter',sans-serif;}
 
 /* HEADER */
-header {
-  position:fixed; top:0; width:100%; height:80px;
-  display:flex; align-items:center; justify-content:space-between;
+header{
+  position:fixed;top:0;width:100%;height:80px;
+  display:flex;align-items:center;justify-content:space-between;
   padding:0 25px;
-  background:linear-gradient(90deg,var(--beige), #D4AF37, var(--beige));
-  border-bottom-left-radius:25px; border-bottom-right-radius:25px;
-  z-index:12; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  background:linear-gradient(90deg,var(--bg),var(--accent),var(--bg));
+  border-bottom-left-radius:25px;border-bottom-right-radius:25px;
+  z-index:12;box-shadow:0 4px 20px rgba(0,0,0,0.1);
 }
-header .title {font-family:'GT Super', sans-serif;font-size:30px; font-weight:800; letter-spacing:1px; display:flex; align-items:colorscheme:light;
-  --beige: #F5F5DC;
-  --black: #000000;
-}
-header .title #user-email {font-size:16px; font-weight:400; color:#fff; opacity:0.01; margin-left:10px;}
-.header-heart-btn {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  background: transparent;
+header .title{font-family:'Lora',serif;font-size:30px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:10px;}
+header .title #user-email{font-size:16px;font-weight:400;color:var(--muted);opacity:0.8;margin-left:10px;}
+.header-heart-btn{
+  width:auto;height:auto;border-radius:0;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:none;outline:none;background:transparent;
 }
 
-/* CATEGORY NAV */
-#category-bar-container { position:fixed;
-top:650px;
-left:80px;
-width:65%;
-display:flex;
-justify-content:center;
-z-index:11;
+/* CATEGORY NAV - Floating Capsule Design */
+#category-bar-container{
+  position:fixed;left:50%;transform:translateX(-50%);
+  top:60%;width:80%;max-width:500px;
+  display:flex;justify-content:center;z-index:11;
+  pointer-events:none;
 }
-
-#category-bar { display:flex;
-overflow-x:auto;
-scroll-behavior:smooth;
-padding:10px 80px;
-gap:10px;
-border-radius:150px;
-border:3px solid rgba(224,231,34,0.75)
+#category-bar{
+  display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;background:var(--card-bg);
+  border-radius:50px;border:1px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);padding:8px;gap:8px;
 }
-
-#category-bar::-webkit-scrollbar { display:flex; }
-
-.category-item {
-  flex:0 0 auto; padding:10px 25px; border-radius:50px; background:#111; color:rgba(255,255,255,0.8);
-  font-weight:bold; font-size:9px; text-align:center; cursor:pointer;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease; white-space:nowrap;
+#category-bar::-webkit-scrollbar{display:none;}
+#category-bar{-ms-overflow-style:none;scrollbar-width:none;}
+.category-item{
+  flex:0 0 auto;padding:12px 20px;border-radius:30px;
+  background:transparent;color:var(--muted);
+  font-family:'Inter',sans-serif;font-weight:500;font-size:14px;
+  text-align:center;cursor:pointer;transition:all 0.2s ease;
+  white-space:nowrap;pointer-events:all;
 }
-.category-item.active {
-  transform: scale(1.2); opacity:1;
-  background: linear-gradient(30deg,#FF2D78,#4D4DFF); color:#fff;
-  box-shadow:0 10px 20px #00bfff,0 10px 40px #2dfeff,10px 0 60px #39ff14,20px 0 80px #ff2bc2;
+.category-item:hover{background:rgba(0,0,0,0.03);}
+.category-item.active{
+  font-weight:800;color:var(--text);
+  background:rgba(0,0,0,0.02);
+}
+.category-highlight{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  height:36px;border-radius:30px;background:var(--accent);
+  z-index:-1;transition:left 0.3s ease,width 0.3s ease;
 }
 
 /* CAROUSEL */
-.carousel {
-  position:relative; flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; scroll-behavior:smooth;
-  padding-top:150px; padding-bottom:100px;
+.carousel{
+  position:relative;flex:1;overflow-y:scroll;
+  scroll-snap-type:y mandatory;scroll-behavior:smooth;
+  padding-top:80px;padding-bottom:80px;
 }
-
-.news-card {
-  scroll-snap-align:center; height:calc(100vh - 250px); display:flex; flex-direction:column; justify-content:flex-start;
-  border-radius:25px; margin:30px 20px; color:white; padding:8px; text-align:left;
-  transform: scale(0.9); opacity:0.4; transition: transform 0.6s ease, opacity 0.6s ease; cursor:pointer;
-  background:#111; border: 1px solid rgba(255,255,255,0.03);
+.news-card{
+  scroll-snap-align:center;height:calc(100vh - 160px);
+  display:flex;flex-direction:column;justify-content:flex-start;
+  border-radius:20px;margin:20px 15px;color:var(--text);
+  padding:20px;text-align:left;transform:scale(0.95);
+  opacity:0.8;transition:transform 0.3s ease,opacity 0.3s ease;
+  cursor:pointer;background:var(--card-bg);
+  border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.04);
 }
-.news-card.active { transform: scale(1); opacity:1; }
-
-/* Keep image as-is (not tinted) - show full image clearly */
-.news-card img { width:100%; height:auto; object-fit:contain; }
-
-/* text/icons remain white/default */
-.news-title { font-size:22px; font-weight:800; margin-bottom:12px; color:#fff; font-family: 'Charter', 'Georgia', serif; }
-.news-text { font-size:16px; line-height:1.8; color:#fff; font-family: 'Charter', 'Georgia', serif; }
-
-/* ICON STYLES */
-.news-icons { display:flex; justify-content:flex-end; gap:15px; }
-.news-icons span { cursor:pointer; transition: transform 0.18s ease; user-select:none; display:inline-block; line-height=1; width:24px; height:24px; }
-.news-icons span:hover { transform: scale(1.1); }
-.news-icons span svg .icon { fill:none; stroke:white; stroke-width:2.2; transition: fill .28s ease, stroke .18s ease, transform .18s ease; transform-origin:center; }
-.news-icons span.liked svg .icon { fill: url(#feedLikeGradient); stroke:none; }
-.news-icons span.liked svg { transform: scale(1.06); transition: transform .16s cubic-bezier(.2,.9,.2,1); }
-.news-icons span.saved svg .icon { fill:white; stroke:none; stroke-width:0; }
+.news-card.active{transform:scale(1);opacity:1;}
+.news-card img{
+  width:100%;height:auto;object-fit:contain;
+  border-radius:12px;margin-bottom:16px;
+}
+.news-title{
+  font-family:'Lora',serif;font-size:22px;font-weight:700;
+  margin-bottom:12px;color:var(--text);
+}
+.news-text{
+  font-family:'Inter',sans-serif;font-size:16px;
+  line-height:1.6;color:var(--text);
+}
+.news-icons{
+  display:flex;justify-content:flex-end;gap:12px;
+  margin-top:16px;
+}
+.news-icons span{
+  cursor:pointer;transition:transform 0.15s ease;
+  user-select:none;display:inline-flex;align-items:center;
+  justify-content:center;width:28px;height:28px;
+}
+.news-icons span:hover{transform:scale(1.1);}
+.news-icons span svg{
+  width:20px;height:20px;transition:fill 0.2s ease;
+}
+.news-icons span.liked svg{fill:var(--accent);}
+.news-icons span.saved svg{fill:var(--accent-2);}
 
 /* FOOTER */
-footer {
-  height:70px; display:flex; justify-content:space-around; align-items:center;
-  border-top-left-radius:25px; border-top-right-radius:25px;
-  background: var(--white);
-  z-index:10;
+footer{
+  height:60px;display:flex;justify-content:space-around;
+  align-items:center;border-top-left-radius:20px;
+  border-top-right-radius:20px;background:var(--card-bg);
+  border-top:1px solid var(--border);z-index:10;
 }
-footer .nav-icon { width:26px; height:26px; cursor:pointer; transition:all 0.3s ease; }
-footer .nav-icon svg { width:100%; height:100%; stroke:black; fill:none; stroke-width:2.2; transition:all 0.3s ease; }
-footer .nav-icon.active svg { fill:none; stroke:black; }
-footer .nav-icon:hover { transform:scale(1.3); }
+footer .nav-icon{
+  width:24px;height:24px;cursor:pointer;transition:all 0.2s ease;
+  display:flex;align-items:center;justify-content:center;
+}
+footer .nav-icon svg{
+  width:20px;height:20px;stroke:var(--muted);
+  fill:none;stroke-width:1.8;transition:all 0.2s ease;
+}
+footer .nav-icon.active svg{
+  stroke:var(--text);fill:var(--text);
+}
+footer .nav-icon:hover{transform:scale(1.1);}
 
 /* SHIMMER */
-.shimmer- { scroll-snap-align:center; height:calc(100vh - 250px); display:flex; flex-direction:column; justify-content:flex-start; border-radius:25px; margin:30px 20px; padding:15px; background:#111; transform:scale(0.9); opacity:0.4; transition: transform 0.6s ease, opacity 0.6s ease; }
-.shimmer-image, .shimmer-line { position:relative; overflow:hidden; background:#222; border-radius:16px; margin-bottom:15px; }
-.shimmer-image { height:50%; border-radius:18px; }
-.shimmer-line.full { height:50px; width:90%; }
-.shimmer-line.medium { height:50px; width:80%; }
-.shimmer-line.short { height:50px; width:60%; }
-.shimmer::before { content:""; position:absolute; top:0; left:-150px; height:100%; width:150px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent); animation:shimmer 1.5s infinite; }
-@keyframes shimmer { 100% { transform: translateX(300%); } }
-
-.no-more { text-align:center; padding:30px 20px; color:rgba(255,255,255,0.6); font-size:14px; }
+.shimmer-{
+  scroll-snap-align:center;height:calc(100vh - 160px);
+  display:flex;flex-direction:column;justify-content:flex-start;
+  border-radius:20px;margin:20px 15px;padding:20px;
+  background:#f0f0f0;transform:scale(0.95);opacity:0.8;
+  transition:transform 0.3s ease,opacity 0.3s ease;
+}
+.shimmer-image,.shimmer-line{
+  position:relative;overflow:hidden;background:#e0e0e0;
+  border-radius:12px;margin-bottom:12px;
+}
+.shimmer-image{height:180px;}
+.shimmer-line.full{height:16px;width:90%;}
+.shimmer-line.medium{height:16px;width:70%;}
+.shimmer-line.short{height:16px;width:50%;}
+.shimmer::before{
+  content:"";position:absolute;top:0;left:-150px;
+  height:100%;width:150px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{100%{transform:translateX(300%);}}
+.no-more{
+  text-align:center;padding:40px 20px;
+  color:var(--muted);font-size:15px;
+}
 
 /* TOAST */
-.toast {
-    position:fixed;
-    left:50%;
-    bottom:80px;
-    transform:translateX(-50%) translateY(12px);
-    background:rgba(0,0,0,0.8);
-    color:#fff;
-    padding:10px 14px;
-    border-radius:12px;
-    font-weight:600;
-    font-size:15px;
-    pointer-events:none;
-    opacity:0;
-    z-index:360;
-    transition:transform .22s ease, opacity .22s ease;
-    box-shadow:0 12px 30px rgba(0,0,0,0.5);
-    display:flex;
-    gap:10px;
-    align-items:center;
+.toast{
+  position:fixed;left:50%;bottom:24px;
+  transform:translateX(-50%) translateY(12px);
+  background:rgba(0,0,0,0.7);color:#fff;
+  padding:10px 16px;border-radius:24px;
+  font-weight:600;font-size:14px;
+  pointer-events:none;opacity:0;z-index:360;
+  transition:transform .22s ease,opacity .22s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  display:flex;gap:8px;align-items:center;
 }
-.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* FLOAT HEART */
-.pop-heart-svg{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(0.2); width:84px; height:84px; pointer-events:none; z-index:350; opacity:0; text-shadow:0 6px 20px rgba(255,45,85,0.32),0 2px 6px rgba(0,0,0,0.6); animation:none; will-change:transform,opacity; }
-@keyframes popHeartAnim { 0%{transform:translate(-50%,-50%) scale(0.2); opacity:0;}10%{transform:translate(-50%,-50%) scale(1.6); opacity:1;}60%{transform:translate(-50%,-50%) scale(1.0); opacity:1;}100%{transform:translate(-50%,-50%) scale(1.0); opacity:0;} }
+.pop-heart-svg{
+  position:fixed;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(0.2);
+  width:60px;height:60px;pointer-events:none;
+  z-index:350;opacity:0;text-shadow:0 4px 12px rgba(255,107,74,0.3);
+  animation:none;will-change:transform,opacity;
+}
+@keyframes popHeartAnim{
+  0%{transform:translate(-50%,-50%) scale(0.2);opacity:0;}
+  10%{transform:translate(-50%,-50%) scale(1.4);opacity:1;}
+  60%{transform:translate(-50%,-50%) scale(1.0);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(1.0);opacity:0;}
+}
 
 /* Logout button styles */
-.header-btn {
-    background:transparent;
-    border:none;
-    color:var(--black);
-    font-family:'GT Super', sans-serif;
-    font-size:14px;
-    cursor:pointer;
-    margin-left:12px;
+.header-btn{
+  background:transparent;border:none;
+  color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:14px;cursor:pointer;margin-left:12px;
+  font-weight:500;
 }
-.header-btn:hover { opacity:0.8; }
+.header-btn:hover{opacity:0.8;color:var(--text);}
+
+/* PROFILE BUTTON */
+.header-profile{
+  background:transparent;border:none;
+  color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:14px;cursor:pointer;margin-right:12px;
+  display:flex;align-items:center;gap:6px;
+  font-weight:500;
+}
+.header-profile:hover{
+  opacity:0.8;color:var(--text);
+}
+.header-profile svg{
+  width:20px;height:20px;
+  stroke:var(--muted);fill:none;stroke-width:1.8;
+}
+.header-profile.active svg{
+  stroke:var(--text);fill:var(--text);
+}
 </style>
 </head>
 
 <body>
 <header>
-    <button id="logout-btn" class="header-btn" style='background:transparent;border:none;color:var(--black);font-family:"GT Super",sans-serif;font-size:14px;cursor:pointer;margin-left:12px;' aria-label="Logout">Logout</button>
+    <button id="logout-btn" class="header-btn" style='background:transparent;border:none;color:var(--muted);font-family:"Inter",sans-serif;font-size:14px;cursor:pointer;margin-left:12px;' aria-label="Logout">Logout</button>
   <div class="title">Slide <span id="user-email"></span></div>
+  <div class="header-profile" id="profile-btn" aria-label="Profile">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+    Profile
+  </div>
   <button class="header-heart-btn" id="header-heart" aria-label="Favorites" title="Favorites">
   <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
     <defs>
@@ -193,6 +243,9 @@ footer .nav-icon:hover { transform:scale(1.3); }
   </svg>
   </button>
 </header>
+
+<!-- Category Highlight Pill -->
+<div class="category-highlight" id="category-highlight"></div>
 
 <div id="category-bar-container">
   <div id="category-bar">
@@ -219,6 +272,14 @@ footer .nav-icon:hover { transform:scale(1.3); }
   <span class="nav-icon bookmark" data-target="bookmark">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12a1 1 0 0 1 1 1v18l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>
   </span>
+  <span class="nav-icon liked" data-target="liked">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+      C2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3
+      C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+  </span>
+  <span class="nav-icon profile" data-target="profile">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+  </span>
 </footer>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -240,7 +301,6 @@ footer .nav-icon:hover { transform:scale(1.3); }
 
 <div id="toast" class="toast" role="status" aria-live="polite" style="display:none"></div>
 <div id="floatingLayer" aria-hidden="true"></div>
-
 <script>
 /* ========== INITIAL STATE & CONFIG ========== */
 const container = document.getElementById('news-container');
@@ -251,6 +311,7 @@ emailDisplay.innerText = userEmail;
 
 const categoryItems = document.querySelectorAll('.category-item');
 const categoryBar = document.getElementById('category-bar');
+const categoryHighlight = document.getElementById('category-highlight');
 
 const PAGE_SIZE = 5;
 let currentPage = 1;
@@ -258,6 +319,9 @@ let selectedCategory = document.querySelector('.category-item.active')?.getAttri
 let keepFetching = true;
 let shownNewsSet = new Set();
 let fetchingInProgress = false;
+let lastScrollTime = 0;
+let isScrolling = false;
+let ticking = false;
 
 const FEED_CACHE_KEY = 'slide_news_feed_v1';
 const FEED_META_KEY = 'slide_news_feed_meta_v1';
@@ -307,7 +371,7 @@ function showFloatingHeart() {
   wrapper.className = 'pop-heart-svg';
   wrapper.style.animation = 'none';
   layer.appendChild(wrapper);
-  wrapper.innerHTML = `<svg viewBox="0 0 24 24" width="84" height="84" aria-hidden="true"><path class="icon heart" d="M12.1 21s-7.8-4.5-9.4-8.1C0.6 9.7 3.2 6 7.2 6c2.2 0 3.5 1.3 4.8 2.7L12 9.9l0.1-1.2C13.4 7.3 14.8 6 17 6c4 0 6.6 3.7 4.5 6.9-1.6 3.6-9.4 8.1-9.4 8.1z" fill="url(#feedPopGradient)" /></svg>`;
+  wrapper.innerHTML = `<svg viewBox="0 0 24 24" width="60" height="60" aria-hidden="true"><path class="icon heart" d="M12.1 21s-7.8-4.5-9.4-8.1C0.6 9.7 3.2 6 7.2 6c2.2 0 3.5 1.3 4.8 2.7L12 9.9l0.1-1.2C13.4 7.3 14.8 6 17 6c4 0 6.6 3.7 4.5 6.9-1.6 3.6-9.4 8.1-9.4 8.1z" fill="url(#feedPopGradient)" /></svg>`;
   requestAnimationFrame(()=> { wrapper.style.animation = 'popHeartAnim 2s cubic-bezier(.2,.9,.2,1) forwards'; });
   setTimeout(()=> wrapper.remove(), 2050);
 }
@@ -322,8 +386,8 @@ function showShimmer(count = 3) {
   const shimmerElems = [];
   for (let i = 0; i < count; i++) {
     const shimmer = document.createElement('div');
-    shimmer.className = 'shimmer- shimmer';
-    shimmer.innerHTML = `<div class="shimmer-image shimmer"></div><div class="shimmer-line full shimmer"></div><div class="shimmer-line medium shimmer"></div><div class="shimmer-line short shimmer"></div>`;
+    shimmer.className = 'shimmer-';
+    shimmer.innerHTML = `<div class="shimmer-image"></div><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div>`;
     container.appendChild(shimmer);
     shimmerElems.push(shimmer);
   }
@@ -351,7 +415,7 @@ function saveFeedToLocal() {
 
 function clearCacheForCategory(cat) { try { localStorage.removeItem(cacheKeyForCategory(cat)); } catch(e){} }
 function clearAllCaches() {
-  try { Object.keys(localStorage).forEach(k=>{ if(k.startsWith(FEED_CACHE_KEY)) localStorage.removeItem(k); }); localStorage.removeItem(FEED_META_KEY); /* don't clear categories_buffer here */ } catch(e) {}
+  try { Object.keys(localStorage).forEach(k=>{ if(k.startsWith(FEED_CACHE_KEY)) localStorage.removeItem(k); }); localStorage.removeItem(FEED_META_KEY); } catch(e) {}
 }
 
 function restoreFeedFromLocal() {
@@ -427,45 +491,28 @@ function createNewsCard(news) {
   newsCopy._saved = news._saved || false;
   card._newsData = newsCopy;
   let imgHtml = '';
-  if (news.image && news.image.trim()) imgHtml = `<img src="${news.image}" alt="News">`; else imgHtml = `<div style="height:50%; background:#1a1a1a; border-radius:18px; margin-bottom:15px;"></div>`;
-  // Use one of the predefined palette colors and make a vibrant two-stop gradient
+  if (news.image && news.image.trim()) imgHtml = `<img src="${news.image}" alt="${news.headline}">`; else imgHtml = `<div style="height:180px; background:#e0e0e0; border-radius:12px; margin-bottom:16px;"></div>`;
+
+  // Use one of the predefined palette colors and make a subtle background tint
   (function(){
     const baseColor = news.backgroundColor || newsColors[colorIndex % newsColors.length];
     colorIndex++; // advance for the next card
 
-    // helpers: hex <-> rgb and lighten
-    function hexToRgb(hex) {
-      hex = String(hex).replace('#','');
-      if (hex.length === 3) hex = hex.split('').map(ch => ch + ch).join('');
-      const val = parseInt(hex, 16);
-      return { r: (val >> 16) & 255, g: (val >> 8) & 255, b: val & 255 };
-    }
-    function rgbToHex(r,g,b) {
-      const toHex = v => {
-        const s = Math.max(0, Math.min(255, Math.round(v))).toString(16);
-        return s.length === 1 ? '0' + s : s;
-      };
-      return '#' + toHex(r) + toHex(g) + toHex(b);
-    }
-    function lightenHex(hex, pct) {
-      const c = hexToRgb(hex);
-      const r = c.r + (255 - c.r) * (pct / 100);
-      the g = c.g + (255 - c.g) * (pct / 100);
-      const b = c.b + (255 - c.b) * (pct / 100);
-      return rgbToHex(r,g,b);
-    }
-
-    const secondary = lightenHex(baseColor, 28); // ~28% lighter for a vibrant highlight
-    card.style.background = `linear-gradient(135deg, ${baseColor}, ${secondary})`;
+    // Create a subtle tint for the card background
+    const tintColor = hexToRgbA(baseColor, 0.03); // 3% opacity
+    card.style.backgroundColor = tintColor;
   })();
+
   const headlineHtml = `<div class="news-title">${escapeHtml(news.headline)}</div>`;
   const textSnippet = escapeHtml(news.description || '').slice(0, 150) + (news.description && news.description.length > 150 ? '...' : '');
   const descriptionHtml = `<div class="news-text">${textSnippet}</div>`;
   const heartSvg = `<svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24"><path class="icon heart" d="M12.1 21s-7.8-4.5-9.4-8.1C0.6 9.7 3.2 6 7.2 6c2.2 0 3.5 1.3 4.8 2.7L12 9.9l0.1-1.2C13.4 7.3 14.8 6 17 6c4 0 6.6 3.7 4.5 6.9-1.6 3.6-9.4 8.1-9.4 8.1z"/></svg>`;
   const bookmarkSvg = `<svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24"><path class="icon bookmark" d="M6 2h12a1 1 0 0 1 1 1v18l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>`;
   card.innerHTML = `${imgHtml}${headlineHtml}${descriptionHtml}<div class="news-icons"><span class="like" title="Like">${heartSvg}</span><span class="save" title="Save">${bookmarkSvg}</span></div>`;
+
   if (newsCopy._liked) card.querySelector('.like')?.classList.add('liked');
   if (newsCopy._saved) card.querySelector('.save')?.classList.add('saved');
+
   const likeBtn = card.querySelector('.like');
   const saveBtn = card.querySelector('.save');
   likeBtn.addEventListener('click', (e) => {
@@ -479,7 +526,7 @@ function createNewsCard(news) {
     e.stopPropagation();
     const nowSaved = saveBtn.classList.toggle('saved');
     card._newsData._saved = nowSaved;
-    saveFeedToLocal(); // Note: this is a typo; should be saveFeedToLocal()
+    saveFeedToLocal();
     if (nowSaved) { /* showToast removed */ sendAction('save', news); } else { /* showToast removed */ sendAction('unsave', news); }
   });
 
@@ -504,9 +551,26 @@ function createNewsCard(news) {
   observer.observe(card);
   return card;
 }
-function escapeHtml(str = ) {
-  return String(str);
+
+// Helper functions for color manipulation
+function hexToRgbA(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
+
+function escapeHtml(str = '') {
+  return String(str).replace(/[&<>"']/g, tag => ({
+    '&': '&',
+    '<': '<',
+    '>': '>',
+    '"': '"',
+    "'": '''
+  })[tag]);
+}
+
+async function fetchNews(infinite = false) {
   if (fetchingInProgress) return;
   fetchingInProgress = true;
   if (!infinite) { container.innerHTML = ""; shownNewsSet.clear(); /* currentPage = 1; keepFetching = true; */ }
@@ -529,7 +593,7 @@ function escapeHtml(str = ) {
     const newsItems = data.news || [];
     const triggerRefresh = data.trigger_refresh || false;
     shimmerElems.forEach(s => s.remove());
-    if (newsItems.length === 0) {
+    If (newsItems.length === 0) {
       keepFetching = false;
       const nm = document.createElement("div");
       nm.className = "no-more";
@@ -732,12 +796,119 @@ function centerCategory(catName) {
     const item = Array.from(categoryItems).find(it => ((it.getAttribute('data-category') || it.innerText).trim() === catName));
     if (!item) return;
     const itemLeft = item.offsetLeft;
-    const itemCenter = itemLeft + (item.offsetWidth / 2);
+    const itemWidth = item.offsetWidth;
+    const itemCenter = itemLeft + (itemWidth / 2);
     const containerCenter = categoryBar.clientWidth / 2;
     const targetScrollLeft = Math.max(0, itemCenter - containerCenter);
+
+    // Smooth scroll to center the item
     categoryBar.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+
+    // Update the highlight pill
+    updateCategoryHighlight(item);
   } catch (e) { console.warn('centerCategory failed', e); }
 }
+
+function updateCategoryHighlight(selectedItem) {
+  if (!selectedItem) return;
+
+  const rect = selectedItem.getBoundingClientRect();
+  const barRect = categoryBar.getBoundingClientRect();
+
+  // Position the highlight pill
+  categoryHighlight.style.left = `${rect.left - barRect.left}px`;
+  categoryHighlight.style.width = `${rect.width}px`;
+
+  // Add smooth transition
+  categoryHighlight.style.transition = 'left 0.3s ease, width 0.3s ease';
+}
+
+/* SCROLL: infinite fetch + persist scroll throttle + category effects */
+container.addEventListener('scroll', () => {
+  // Throttle scroll events for performance
+  const now = Date.now();
+  if (now - lastScrollTime < 50) return;
+  lastScrollTime = now;
+
+  // Save scroll position periodically
+  if (!container._saveScrollThrottle) {
+    container._saveScrollThrottle = true;
+    setTimeout(()=> { saveFeedToLocal(); container._saveScrollThrottle = false; }, 800);
+  }
+
+  // Handle category effects based on scroll position
+  if (!ticking) {
+    window.requestAnimationFrame(() => {
+      updateCategoryEffects();
+      ticking = false;
+    });
+    ticking = true;
+  }
+
+  // Infinite scroll trigger
+  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 500) {
+    if (keepFetching && !fetchingInProgress) fetchNews(true);
+  }
+});
+
+function updateCategoryEffects() {
+  const scrollLeft = categoryBar.scrollLeft;
+  const barWidth = categoryBar.clientWidth;
+  const centerX = scrollLeft + (barWidth / 2);
+
+  categoryItems.forEach(item => {
+    const rect = item.getBoundingClientRect();
+    const barRect = categoryBar.getBoundingClientRect();
+    const itemLeftInBar = rect.left - barRect.left;
+    const itemWidth = rect.width;
+    const itemCenterInBar = itemLeftInBar + (itemWidth / 2);
+
+    // Calculate distance from center (normalized)
+    const distanceFromCenter = Math.abs(itemCenterInBar - centerX);
+    const maxDistance = barWidth / 2;
+    const normalizedDistance = Math.min(distanceFromCenter / maxDistance, 1);
+
+    // Calculate scale and opacity (0.7-1.0 scale, 0.35-1.0 opacity)
+    const scale = 0.7 + (0.3 * (1 - normalizedDistance));
+    const opacity = 0.35 + (0.65 * (1 - normalizedDistance));
+
+    // Apply transforms
+    item.style.transform = `scale(${scale})`;
+    item.style.opacity = `${opacity}`;
+    item.style.transition = 'transform 0.1s ease, opacity 0.1s ease';
+  });
+
+  // Update highlight pill position based on center item
+  const centerItem = Array.from(categoryItems).find(item => {
+    const rect = item.getBoundingClientRect();
+    const barRect = categoryBar.getBoundingClientRect();
+    const itemLeftInBar = rect.left - barRect.left;
+    const itemWidth = rect.width;
+    const itemCenterInBar = itemLeftInBar + (itemWidth / 2);
+    return Math.abs(itemCenterInBar - centerX) < (itemWidth / 2);
+  });
+
+  if (centerItem) {
+    updateCategoryHighlight(centerItem);
+  }
+}
+
+/* DEBOUNCE HELPER */
+function debounce(fn, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+/* Resize handler to recalculate positions */
+window.addEventListener('resize', debounce(() => {
+  // Re-center the selected category on resize
+  centerCategory(selectedCategory);
+  // Re-apply scroll effects
+  updateCategoryEffects();
+}, 200));
 
 /* FOOTER NAV + CATEGORY CLICK */
 document.querySelectorAll('footer .nav-icon').forEach(icon => {
@@ -763,6 +934,13 @@ document.querySelectorAll('footer .nav-icon').forEach(icon => {
     } else if (target === 'bookmark') {
       keepFetching = false;
       window.location.href = `bookmark.html${emailParam}`;
+    } else if (target === 'liked') {
+      keepFetching = false;
+      window.location.href = `liked.html${emailParam}`;
+    } else if (target === 'profile') {
+      keepFetching = false;
+      // TODO: Implement profile page - for now just go to news
+      window.location.href = `news.html${emailParam}`;
     }
   });
 });
@@ -794,15 +972,17 @@ document.getElementById('header-heart').addEventListener('click', () => {
   window.location.href = `liked.html${emailParam}`;
 });
 
-/* SCROLL: infinite fetch + persist scroll throttle */
-container.addEventListener('scroll', () => {
-  if (!container._saveScrollThrottle) {
-    container._saveScrollThrottle = true;
-    setTimeout(()=> { saveFeedToLocal(); container._saveScrollThrottle = false; }, 800);
-  }
-  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 500) {
-    if (keepFetching && !fetchingInProgress) fetchNews(true);
-  }
+/* PROFILE BUTTON */
+document.getElementById('profile-btn').addEventListener('click', () => {
+  // For now, navigate to news page with email param
+  // In a full implementation, this would go to a dedicated profile page
+  const emailParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
+  window.location.href = `news.html${emailParam}`;
+});
+
+/* SCROLL: persistence on unload */
+window.addEventListener('beforeunload', () => {
+  saveFeedToLocal();
 });
 
 /* AUTO REFRESH WHILE OPEN: check every 1 minute and clear if cache older than TTL */

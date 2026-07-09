@@ -4,136 +4,145 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Bookmark — SLIDE</title>
-<link href="https://fonts.googleapis.com/css2?family=Charter:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#ffffff;
-    --card:#f8f9fa;
-    --muted:#6c757d;
-    --white:#000000;
-    --gap:12px;
-    --card-height:120px; /* default comfortable height */
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:"Charter",serif;-webkit-font-smoothing:antialiased;}
-  header{
-    height:64px; display:flex; align-items:center; gap:12px; padding:0 12px;
-    border-bottom:1px solid rgba(0,0,0,0.1);
-    position:sticky; top:0; background:var(--bg); z-index:20;
-  }
-  .back-btn{
-    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
-    background:transparent; border:0; color:var(--white); cursor:pointer;
-  }
-  header h1{ font-family:"Charter",sans-serif; color:var(--white); font-size:20px; margin:0; text-align:center; flex:1; pointer-events:none; }
+:root {
+  --bg:        #FAF7F2;
+  --text:      #22242A;
+  --muted:     #78716C;
+  --accent:    #FF6B4A;
+  --accent-2:  #2A9D8F;
+  --card-bg:   #FFFFFF;
+  --border:    #EDE7DE;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;-webkit-font-smoothing:antialiased;}
+header{
+  height:64px;display:flex;align-items:center;gap:12px;padding:0 12px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg);z-index:20;
+}
+.back-btn{
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:0;color:var(--muted);cursor:pointer;
+}
+.back-btn:hover{color:var(--text);}
+header h1{font-family:"Lora",serif;color:var(--text);font-size:20px;margin:0;text-align:center:flex:1;pointer-events:none;font-weight:700;}
 
-  /* MAIN LIST: fixed under header and scrollable */
-  .list {
-    position:fixed;
-    top:64px;
-    left:0;
-    right:0;
-    bottom:0;
-    padding: 14px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap);
-    -webkit-overflow-scrolling: touch;
-    scrollbar-gutter: stable;
-    background: transparent;
-  }
+/* MAIN LIST: fixed under header and scrollable */
+.list {
+  position:fixed;
+  top:64px;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:16px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+  background:transparent;
+}
 
-  /* Card: image left, text vertically centred */
-  .card{
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    background: var(--card);
-    border-radius:12px;
-    overflow: hidden;
-    border:1px solid rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: transform .12s ease, box-shadow .12s ease;
-    align-items: center; /* vertical centering */
-    padding: 5px;
-    min-height: var(--card-height);
-    max-height: var(--card-height);
-    color: var(--white);
-  }
-  .card:focus, .card:hover{ transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.15); outline: none; }
+/* Card: image left, text vertically centred */
+.card{
+  display:flex;
+  flex-direction:row;
+  gap:12px;
+  background:var(--card-bg);
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  cursor:pointer;
+  transition:transform .12s ease,box-shadow .12s ease;
+  align-items:center; /* vertical centering */
+  min-height:120px;
+  max-height:120px;
+}
+.card:focus,.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08);outline:none;}
 
-  .card-media {
-    flex: 0 0 120px;
-    height: 120px;
-    width:150px;
-    border-radius: 8px;
-    overflow: hidden;
-    background:#e9ecef;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .card-media img{
-    width: 170px;
-    height: 120px;
-    object-fit: cover;
-    display: block;
-    border-radius: 6px;
-  }
+.card-media{
+  flex:0 0 100px;
+  height:100px;
+  width:120px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#f8f9fa;
+  display:flex;align-items:center;justify-content:center;
+}
+.card-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:8px;
+}
 
-  .card-body{
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    justify-content: center;
-  }
+.card-body{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+  justify-content:center;
+}
 
-  .headline{
-    font-weight:800;
-    font-size:18px;
-    margin:0;
-    line-height:1.2;
-    color:var(--white);
-    overflow:hidden;
-    text-overflow:ellipsis;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    white-space:normal;
-  }
+.headline{
+  font-family:"Lora",serif;
+  font-weight:700;
+  font-size:18px;
+  margin:0;
+  line-height:1.3;
+  color:var(--text);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  white-space:normal;
+}
 
-  .desc{
-    font-weight:400;
-    font-size:14px;
-    color:var(--muted);
-    line-height:1.4;
-    overflow:hidden;
-    display:-webkit-box;
-    -webkit-box-orient:vertical;
-    -webkit-line-clamp:3;
-  }
+.desc{
+  font-family:"Inter",sans-serif;
+  font-weight:400;
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.5;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+}
 
-  /* hide categories visually but keep in DOM/payload */
-  .meta-row { display:block; height=0; visibility:hidden; margin-top:auto; }
+/* Categories kept in payload but not shown */
+.meta-row{display:block;height:0;visibility:hidden;margin-top:auto;}
 
-  .empty{ text-align:center; color:var(--muted); margin:70px 20px; font-size:16px; }
+.empty{text-align:center;color:var(--muted);margin:80px 20px;font-size:15px;}
 
-  /* responsive tweaks */
-  @media (max-width:420px){
-    :root { --card-height:110px; }
-    .card-media { flex:0 0 96px; height:72px; }
-    .card-media img{ width:96px; height:72px; }
-    .headline{ font-size:16px; }
-    .desc{ font-size:13px; }
-  }
-  @media (max-width:360px){
-    :root { --card-height:100px; }
-    .card-media { flex:0 0 88px; height:64px; }
-    .card-media img{ width:88px; height:64px; }
-    .headline{ font-size:15px; }
-    .desc{ font-size:13px; }
-  }
+/* responsive tweaks */
+@media (max-width:480px){
+  :root{--card-height:110px;}
+  .card-media{flex:0 0 80px;height:80px;width:100px;}
+  .card-media img{width:80px;height:80px;border-radius:6px;}
+  .headline{font-size:16px;}
+  .desc{font-size:13px;}
+  .card{min-height:110px;max-height:110px;}
+  header{padding:0 8px;}
+  .list{padding:12px;gap:12px;}
+}
+@media (max-width:360px){
+  :root{--card-height:100px;}
+  .card-media{flex:0 0 70px;height:70px;width:90px;}
+  .card-media img{width:70px;height:70px;border-radius:6px;}
+  .headline{font-size:15px;}
+  .desc{font-size:12px;}
+  .card{min-height:100px;max-height:100px;}
+  header{padding:0 6px;}
+  .list{padding:10px;gap:10px;}
+}
 </style>
 </head>
 <body>
@@ -161,7 +170,7 @@
     bookmark: true
   };
 
-  function escapeHtml(s=''){ return String(s||'').replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'",'''); }
+  function escapeHtml(s=''){return String(s||'').replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'",''');}
   function getEmail(){
     const q = new URLSearchParams(location.search).get('email');
     if (q) return q;
@@ -190,14 +199,26 @@
       const s=document.createElement('div');
       s.className='skeleton-card';
       s.innerHTML=`
-        <div class="skeleton-img shimmer"></div>
+        <div class="skeleton-img"></div>
         <div class="skeleton-text">
-          <div class="skeleton-line shimmer"></div>
-          <div class="skeleton-line shimmer"></div>
-          <div class="skeleton-line shimmer short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
         </div>`;
       list.appendChild(s);
     }
+    // Add shimmer animation
+    const now = Date.now();
+    list.querySelectorAll('.skeleton-img').forEach(el => {
+      el.style.background = `linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)`;
+      el.style.backgroundSize = '200% 100%';
+      el.style.animation = `shimmer 1.5s infinite`;
+    });
+    list.querySelectorAll('.skeleton-line').forEach(el => {
+      el.style.background = `linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)`;
+      el.style.backgroundSize = '200% 100%';
+      el.style.animation = `shimmer 1.5s infinite`;
+    });
   }
   function hideShimmer(){
     const list=document.getElementById('list');
@@ -241,17 +262,16 @@
     const categories = item.categories || item.Categories || item.category || [];
 
     const card = document.createElement('div');
-    const gradIndex = index % 4;
-    card.className = `card`;
+    card.className = 'card';
     card.setAttribute('role','listitem');
     card.setAttribute('tabindex','0');
     card.innerHTML = `
       <div class="card-media" aria-hidden="true">
-        <img src="${escapeHtml(img || 'https://via.placeholder.com/800x400?text=No+Image')}" alt="${escapeHtml(headline)}">
+        <img src="${escapeHtml(img || 'https://via.placeholder.com/400x300?text=No+Image')}" alt="${escapeHtml(headline)}">
       </div>
       <div class="card-body">
-        <div class="headline" title="${escapeHtml(headline)}">${escapeHtml(headline.length > 200 ? headline.slice(0,200) + '...' : headline)}</div>
-        <div class="desc">${escapeHtml(desc.length > 800 ? desc.slice(0,800) + '...' : desc)}</div>
+        <div class="headline" title="${escapeHtml(headline.length > 100 ? headline.slice(0,100) + '...' : headline)}">${escapeHtml(headline.length > 200 ? headline.slice(0,200) + '...' : headline)}</div>
+        <div class="desc">${escapeMd(desc.length > 300 ? desc.slice(0,300) + '...' : desc)}</div>
         <div class="meta-row"><!-- categories hidden intentionally --></div>
       </div>
     `;
@@ -277,6 +297,8 @@
 
     return card;
   }
+
+  function escapeMd(s=''){return String(s||'').replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'",''');}
 
   /* init / render with compact mode behavior */
   (async function init(){
@@ -361,6 +383,6 @@
       list.appendChild(createCard(FALLBACK, 0));
     }
   })();
-</script>
+  </script>
 </body>
 </html>

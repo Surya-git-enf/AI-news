@@ -4,58 +4,80 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title> Sign Up / Sign In </title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --white: #FFFFFF;
-  --beige: #F5F5DC;
-  --black: #000000;
-  --white-translucent: rgba(255, 255, 255, 0.9);
-  --white-semi-transparent: rgba(255, 255, 255, 0.2);
-  --black-translucent: rgba(0, 0, 0, 0.5);
-  --black-semi-transparent: rgba(0, 0, 0, 0.2);
+  --bg:        #FAF7F2;
+  --text:      #22242A;
+  --muted:     #78716C;
+  --accent:    #FF6B4A;
+  --accent-2:  #2A9D8F;
+  --card-bg:   #FFFFFF;
+  --border:    #EDE7DE;
 }
-body{margin:0;font-family:'Charter', serif;height:100vh;background:linear-gradient(135deg, var(--white), var(--beige));display:flex;justify-content:center;align-items:center;overflow:hidden;transition:opacity .8s ease}
+body{margin:0;font-family:'Inter', sans-serif;height:100vh;background:var(--bg);display:flex;justify-content:center;align-items:center;overflow:hidden;transition:opacity .8s ease}
 .fade-out{opacity:0}
-/* keep original glass card look */
-.auth-container{width:250px;background:var(--white-semi-transparent);backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 0 25px var(--white-translucent);padding:30px;text-align:center;position:relative;overflow:hidden;animation:fadeIn 420ms ease}
-@keyframes fadeIn{from{opacity:0;transform:scale(.995)}to{opacity:1;transform:scale(1)}}
-
-.auth-container h2{font-family:'GT Super', sans-serif;color:var(--black);margin-bottom:20px;text-shadow:0 0 10px rgba(0,0,0,0.1)}
-input{width:80%;padding:12px;margin:8px 0;border:none;border-radius:25px;outline:none;text-align:center;font-size:16px;box-shadow:0 0 5px rgba(0,0,0,0.1);background:var(--white-translucent)}
-button{width:85%;padding:12px;margin-top:10px;border:none;border-radius:25px;font-size:17px;font-weight:700;color:var(--white);cursor:pointer;background:linear-gradient(90deg,var(--beige), #D4AF37);box-shadow:0 0 15px rgba(0,0,0,0.2);transition:all .25s}
-button:hover{transform:scale(1.04);box-shadow:0 0 25px rgba(0,0,0,0.2)}
-.switch{margin-top:18px;color:var(--black);font-size:14px;cursor:pointer}
-.loading{border:4px solid rgba(0,0,0,0.1);border-top:4px solid var(--black);border-radius:50%;width:25px;height:25px;margin:12px auto;animation:spin 1s linear infinite;display:none}
+/* Updated card design matching new system */
+.auth-container{width:280px;background:var(--card-bg);border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);border:1px solid var(--border);padding:24px;text-align:center;position:relative;overflow:hidden;}
+.auth-container h2{font-family:'Lora', serif;font-weight:700;color:var(--text);margin-bottom:24px;}
+.input-group{margin-bottom:16px;}
+.input-group label{display:block;font-family:'Inter', sans-serif;font-weight:600;font-size:14px;color:var(--text);margin-bottom:8px;}
+.input-group input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font-family:'Inter', sans-serif;font-size:14px;color:var(--text);transition:all 0.2s ease;}
+.input-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,107,74,0.2);}
+.button-group{margin-top:24px;}
+.button-group button{width:100%;padding:12px 24px;border:none;border-radius:12px;font-family:'Inter', sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s ease;}
+.button-group button.primary{background:var(--accent);color:white;}
+.button-group button.primary:hover{background:#ff5231;}
+.button-group button.secondary{background:transparent;color:var(--text);border:1px solid var(--border);}
+.button-group button.secondary:hover{background:#f8f9fa;}
+.toggle-link{margin-top:16px;display:block;font-family:'Inter', sans-serif;font-size:14px;color:var(--muted);text-decoration:none;}
+.toggle-link:hover{color:var(--text);text-decoration:underline;}
+.loading{display:flex;justify-content:center;align-items:center;margin:16px 0;}
+.loading div{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:linear-gradient(135deg,var(--beige), #D4AF37);color:var(--black);border-radius:16px;padding:18px 22px;box-shadow:0 0 30px rgba(0,0,0,0.2);text-align:center;opacity:0;pointer-events:none;transition:all .28s}
+.popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.7);background:var(--card-bg);color:var(--text);border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:1px solid var(--border);text-align:center;opacity:0;pointer-events:none;transition:all .28s}
 .popup.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-.popup.error{background:linear-gradient(135deg,#ff5252,#ff1744)}
-
-/* transition: outgoing = slide left + fade + zoom-out */
-.slide-out{animation:slideOut .36s forwards}
-@keyframes slideOut{from{transform:translateX(0) scale(1);opacity:1}to{transform:translateX(-28%) scale(.92);opacity:0}}
-
-/* incoming = slide from right + fade + zoom-in */
-.slide-in{animation:slideIn .42s forwards}
-@keyframes slideIn{from{transform:translateX(30%) scale(.96);opacity:0}60%{transform:translateX(-4%) scale(1.02);opacity:1}to{transform:translateX(0) scale(1);opacity:1}}
-
-@media (max-width:420px){ .auth-container{width:92vw;padding:22px} input{width:90%} button{width:90%} }
+.popup.error{border-color:#ff5252;}
+.popup.error .title{color:#ff5252;}
+.popup.success{border-color:#2a9d8f;}
+.popup.success .title{color:#2a9d8f;}
+.popup-title{font-family:'Lora', serif;font-weight:700;margin-bottom:12px;}
+.popup-message{font-family:'Inter', sans-serif;font-size:14px;margin-bottom:24px;}
+.popup-actions .btn{padding:8px 16px;border:none;border-radius:8px;font-family:'Inter', sans-serif;font-weight:600;cursor:pointer;}
+.popup-actions .btn-ok{background:var(--accent);color:white;}
+.popup-actions .btn-cancel{background:transparent;color:var(--text);border:1px solid var(--border);}
 </style>
 </head>
 <body>
   <div class="auth-container" id="authBox" aria-live="polite">
     <h2 id="formTitle">Sign Up</h2>
     <div id="formContent">
-      <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
-      <input id="password" type="password" placeholder="Enter password (min 6 chars)" autocomplete="current-password" />
-      <div class="loading" id="loading" aria-hidden="true"></div>
-      <button id="authBtn" type="button">Sign Up</button>
-      <div class="switch" id="switchText">Already have an account? Sign In</div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="Enter your email" autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="Enter password (min 6 chars)" autocomplete="current-password" />
+      </div>
+      <div class="loading" id="loading" aria-hidden="true">
+        <div></div>
+      </div>
+      <div class="button-group">
+        <button id="authBtn" type="button" class="primary">Sign Up</button>
+      </div>
+      <div class="toggle-link" id="switchText">Already have an account? Sign In</div>
     </div>
   </div>
 
-  <div class="popup" id="popup"><h3 id="popupTitle"></h3><p id="popupMsg"></p></div>
+  <div class="popup" id="popup" role="dialog" aria-modal="true">
+    <div class="popup-title" id="popupTitle"></div>
+    <div class="popup-message" id="popupMsg"></div>
+    <div class="popup-actions">
+      <button id="popupOkBtn" class="btn btn-ok">OK</button>
+      <button id="popupCancelBtn" class="btn btn-cancel" style="display:none;">Cancel</button>
+    </div>
+  </div>
 
 <script type="module">
 /*
@@ -87,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const popup = document.getElementById('popup');
   const popupTitle = document.getElementById('popupTitle');
   const popupMsg = document.getElementById('popupMsg');
+  const popupOkBtn = document.getElementById('popupOkBtn');
+  const popupCancelBtn = document.getElementById('popupCancelBtn');
 
   let isSignUp = true;
   let supabaseClient = null;
@@ -111,12 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showPopup(type='info', title='', msg=''){
-    popup.className = 'popup' + (type === 'error' ? ' error' : '');
+    popup.className = 'popup' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
     popupTitle.innerText = title;
     popupMsg.innerText = msg;
     popup.classList.add('show');
     setTimeout(()=> popup.classList.remove('show'), 2800);
+    // Handle button visibility
+    if (type === 'error') {
+      popupOkBtn.style.display = 'block';
+      popupCancelBtn.style.display = 'none';
+    } else if (type === 'success') {
+      popupOkBtn.style.display = 'block';
+      popupCancelBtn.style.display = 'none';
+    }
   }
+
+  // --- Popup button handlers
+  popupOkBtn.addEventListener('click', () => {
+    popup.classList.remove('show');
+  });
+
+  popupCancelBtn.addEventListener('click', () => {
+    popup.classList.remove('show');
+  });
 
   // --- Fallback local "DB" using localStorage
   function _getMockUsers(){
